@@ -722,6 +722,100 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Success Stories ───────────────────────────── */}
+        <section className="py-16">
+          <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl mb-3">
+            Success Stories
+          </h2>
+          <p className="text-center text-sm text-gray-500 mb-12 max-w-xl mx-auto">
+            Hear from real businesses and couriers who are growing with LoadMoveGH
+          </p>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                name: "Kwame Mensah",
+                role: "Fleet Owner",
+                company: "Mensah Haulage Ltd",
+                location: "Accra",
+                quote: "LoadMoveGH means we never have to say no to a customer. Our trucks are always loaded.",
+                highlight: "never have to say no",
+                date: "12.01.2026",
+                initials: "KM",
+                color: "from-green-700 to-emerald-600",
+              },
+              {
+                name: "Abena Osei-Bonsu",
+                role: "Operations Manager",
+                company: "GoldCoast Shipping",
+                location: "Kumasi",
+                quote: "LoadMoveGH has opened a lot of doors for us. We doubled our deliveries in 6 months.",
+                highlight: "opened a lot of doors",
+                date: "28.11.2025",
+                initials: "AO",
+                color: "from-amber-700 to-yellow-600",
+              },
+              {
+                name: "Yaw Asante",
+                role: "Independent Courier",
+                company: "Celebrating 1 year on the platform",
+                location: "Tamale",
+                quote: "It'd be impossible to do it any other way. The AI pricing helps me win more bids.",
+                highlight: "impossible to do it any other way",
+                date: "05.09.2025",
+                initials: "YA",
+                color: "from-blue-700 to-indigo-600",
+              },
+              {
+                name: "Efua Darko",
+                role: "CEO",
+                company: "Darko Logistics Group",
+                location: "Takoradi",
+                quote: "It's a perfect business model. Escrow payments gave us the trust we needed to scale.",
+                highlight: "perfect business model",
+                date: "18.07.2025",
+                initials: "ED",
+                color: "from-purple-700 to-violet-600",
+              },
+            ].map((story) => (
+              <div key={story.name} className="group rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                {/* Avatar header with quote overlay */}
+                <div className={`relative h-48 bg-gradient-to-br ${story.color} p-6 flex flex-col justify-between`}>
+                  {/* Large avatar circle */}
+                  <div className="flex items-start gap-3">
+                    <div className="h-14 w-14 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg font-bold text-white">{story.initials}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-white">{story.name}</p>
+                      <p className="text-xs text-white/70">{story.location}</p>
+                    </div>
+                  </div>
+                  {/* Quote on image */}
+                  <p className="text-sm text-white/95 leading-snug">
+                    &ldquo;{story.quote.split(story.highlight)[0]}
+                    <span className="font-bold text-yellow-300">{story.highlight}</span>
+                    {story.quote.split(story.highlight)[1]}&rdquo;
+                  </p>
+                </div>
+
+                {/* Card body */}
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
+                      Success stories
+                    </span>
+                    <span className="text-xs text-gray-400">{story.date}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 leading-snug">
+                    {story.company}: {story.role}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── Bottom CTA ─────────────────────────────────── */}
         <section className="py-16 text-center">
           <div className="card bg-brand-600 text-white max-w-3xl mx-auto p-10">
