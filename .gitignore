@@ -49,6 +49,9 @@ mobile/.packages
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 
+# ── CI/CD (needs workflow token scope to push) ──
+.github/workflows/deploy.yml
+
 # ── Misc ────────────────────────────
 *.log
 coverage/
