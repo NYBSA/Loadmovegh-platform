@@ -844,11 +844,145 @@ export default function HomePage() {
       </main>
 
       {/* ── Footer ────────────────────────────────────── */}
-      <footer className="border-t border-gray-200 bg-white py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} LoadMoveGH. Built for Ghana&apos;s freight industry.
+      <footer className="bg-gray-900 text-gray-300">
+        {/* Top bar — Contact + Social */}
+        <div className="border-b border-gray-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-brand-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+              </svg>
+              <span className="text-lg sm:text-xl font-bold text-white">Call us +233 557 542 254</span>
+            </div>
+            {/* Social icons */}
+            <div className="flex items-center gap-3">
+              {[
+                { label: "Facebook", href: "https://facebook.com/loadmovegh", icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /> },
+                { label: "Twitter / X", href: "https://x.com/loadmovegh", icon: <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" /> },
+                { label: "LinkedIn", href: "https://linkedin.com/company/loadmovegh", icon: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" /></> },
+                { label: "Instagram", href: "https://instagram.com/loadmovegh", icon: <><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></> },
+                { label: "YouTube", href: "https://youtube.com/@loadmovegh", icon: <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" /><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" /></> },
+              ].map((s) => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:bg-brand-600 hover:text-white transition-all duration-200"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">{s.icon}</svg>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main footer columns */}
+        <div className="border-b border-gray-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
+            {/* Solutions */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Solutions</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Courier drivers</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Shipping companies</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Freight forwarders</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Fleet owners</a></li>
+              </ul>
+            </div>
+
+            {/* Platform */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Platform</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Driver App</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Fleet Manager</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">AI Pricing Engine</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">GPS Tracking</a></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Resources</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">LM Academy</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Success stories</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Blog</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">FAQs</a></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Support</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">How to join</a></li>
+                <li><a href="mailto:support@loadmovegh.com" className="text-sm text-gray-400 hover:text-white transition">Contact us</a></li>
+                <li><a href="mailto:support@loadmovegh.com" className="text-sm text-gray-400 hover:text-white transition">Help centre</a></li>
+              </ul>
+            </div>
+
+            {/* About */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">About</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">About us</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Our partners</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Careers</a></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-4">Legal</h4>
+              <ul className="space-y-2.5">
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Privacy policy</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Terms of use</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Cookie policy</a></li>
+                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Data protection</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* SEO keyword links row */}
+        <div className="border-b border-gray-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-gray-500">
+              {[
+                "Courier loads Ghana",
+                "Freight jobs Accra",
+                "Truck driver jobs",
+                "Courier network Ghana",
+                "Owner driver jobs",
+                "Same day courier loads",
+                "Freight exchange",
+                "Haulage contracts",
+                "Logistics marketplace",
+                "Courier work for drivers",
+              ].map((kw) => (
+                <a key={kw} href="/#auth" className="hover:text-gray-300 transition">{kw}</a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom copyright */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-md bg-brand-600 flex items-center justify-center">
+              <span className="text-xs font-black text-white">LM</span>
+            </div>
+            <span className="text-sm font-bold text-white">
+              LoadMove<span className="text-brand-400">GH</span>
+            </span>
+          </div>
+          <p className="text-xs text-gray-500">
+            &copy; {new Date().getFullYear()} LoadMoveGH Ltd. All rights reserved. Built for Ghana&apos;s freight industry.
           </p>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+            <span>SSL Secured</span>
+          </div>
         </div>
       </footer>
     </div>
