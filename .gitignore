@@ -1,0 +1,55 @@
+# ── OS ──────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── IDEs ────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Node / Next.js ──────────────────
+node_modules/
+.next/
+out/
+build/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Python ──────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+env/
+*.egg
+
+# ── Environment / Secrets ───────────
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ── ML Models (large binaries) ──────
+ml_models/*.pkl
+ml_models/*.joblib
+ml_models/*.h5
+
+# ── Flutter / Dart ──────────────────
+mobile/.dart_tool/
+mobile/build/
+mobile/.packages
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+
+# ── Misc ────────────────────────────
+*.log
+coverage/
+.pytest_cache/

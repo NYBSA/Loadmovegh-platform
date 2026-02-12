@@ -1,0 +1,27 @@
+# LoadMoveGH AI Microservice Dependencies
+# Lighter set for the ML/AI container only
+
+# Web framework
+fastapi
+uvicorn[standard]
+
+# Config & validation
+pydantic>=2.0
+pydantic-settings
+python-dotenv
+
+# Database (read-heavy, shares main DB)
+sqlalchemy[asyncio]>=2.0
+asyncpg
+
+# Auth (to validate JWT from main API)
+PyJWT
+
+# ML / AI
+numpy
+lightgbm
+scikit-learn
+
+# OpenAI (AI Assistant)
+openai
+httpx

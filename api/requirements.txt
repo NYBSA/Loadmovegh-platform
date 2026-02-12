@@ -1,0 +1,24 @@
+# LoadMoveGH Identity + Freight + Wallet + AI Pricing Service
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+pydantic-settings
+email-validator
+phonenumbers
+sqlalchemy[asyncio]>=2.0
+asyncpg
+alembic
+bcrypt
+PyJWT
+python-dotenv
+python-multipart
+httpx
+
+# ML Pricing Engine
+numpy
+lightgbm
+scikit-learn
+
+# AI Assistant (OpenAI)
+openai
+httpx

@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #0f172a;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl bg-white shadow-sm border border-gray-100 p-5;
+  }
+  .card-hover {
+    @apply card transition-shadow hover:shadow-md;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-green {
+    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20;
+  }
+  .badge-yellow {
+    @apply badge bg-amber-50 text-amber-700 ring-1 ring-amber-600/20;
+  }
+  .badge-red {
+    @apply badge bg-red-50 text-red-700 ring-1 ring-red-600/20;
+  }
+  .badge-blue {
+    @apply badge bg-blue-50 text-blue-700 ring-1 ring-blue-600/20;
+  }
+  .badge-gray {
+    @apply badge bg-gray-50 text-gray-600 ring-1 ring-gray-500/20;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+  }
+  .input {
+    @apply block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  }
+}
+
+/* ── Vehicle Carousel Animations ────────────────────── */
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes wheel-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vehicle-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-left 30s linear infinite;
+}
+
+.vehicle-track:hover {
+  animation-play-state: paused;
+}
+
+.vehicle-card {
+  animation: bounce-subtle 3s ease-in-out infinite;
+}
+
+.vehicle-card:nth-child(2) { animation-delay: 0.3s; }
+.vehicle-card:nth-child(3) { animation-delay: 0.6s; }
+.vehicle-card:nth-child(4) { animation-delay: 0.9s; }
+.vehicle-card:nth-child(5) { animation-delay: 1.2s; }
+.vehicle-card:nth-child(6) { animation-delay: 1.5s; }
+.vehicle-card:nth-child(7) { animation-delay: 1.8s; }
+.vehicle-card:nth-child(8) { animation-delay: 2.1s; }
+.vehicle-card:nth-child(9) { animation-delay: 0.15s; }
+.vehicle-card:nth-child(10) { animation-delay: 0.45s; }
+.vehicle-card:nth-child(11) { animation-delay: 0.75s; }
+.vehicle-card:nth-child(12) { animation-delay: 1.05s; }
+.vehicle-card:nth-child(13) { animation-delay: 1.35s; }
+.vehicle-card:nth-child(14) { animation-delay: 1.65s; }
+.vehicle-card:nth-child(15) { animation-delay: 1.95s; }
+.vehicle-card:nth-child(16) { animation-delay: 2.25s; }
+
+.vehicle-card img {
+  transition: transform 0.4s ease, filter 0.4s ease;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+}
+
+.vehicle-card:hover img {
+  transform: scale(1.08);
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+}
+
+.vehicle-card .vehicle-name {
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.vehicle-card:hover .vehicle-name {
+  color: #0d6a3c;
+  transform: scale(1.05);
+}
+
+/* Gradient fade edges for the carousel */
+.carousel-wrapper {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+/* Road line animation under vehicles */
+@keyframes road-dash {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -60px 0;
+  }
+}
+
+.road-line {
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #d1d5db 0px,
+    #d1d5db 20px,
+    transparent 20px,
+    transparent 40px
+  );
+  background-size: 60px 3px;
+  animation: road-dash 1.5s linear infinite;
+}
