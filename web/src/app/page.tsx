@@ -933,10 +933,10 @@ export default function HomePage() {
             <div>
               <h4 className="text-sm font-semibold text-white mb-4">Legal</h4>
               <ul className="space-y-2.5">
-                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Privacy policy</a></li>
-                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Terms of use</a></li>
-                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Cookie policy</a></li>
-                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Data protection</a></li>
+                <li><a href="/privacy" className="text-sm text-gray-400 hover:text-white transition">Privacy policy</a></li>
+                <li><a href="/terms" className="text-sm text-gray-400 hover:text-white transition">Terms of use</a></li>
+                <li><a href="/privacy#cookies" className="text-sm text-gray-400 hover:text-white transition">Cookie policy</a></li>
+                <li><a href="/privacy" className="text-sm text-gray-400 hover:text-white transition">Data protection</a></li>
               </ul>
             </div>
           </div>
