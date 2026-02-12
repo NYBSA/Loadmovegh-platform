@@ -905,7 +905,7 @@ export default function HomePage() {
                 <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">LM Academy</a></li>
                 <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Success stories</a></li>
                 <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">Blog</a></li>
-                <li><a href="/#auth" className="text-sm text-gray-400 hover:text-white transition">FAQs</a></li>
+                <li><a href="/faqs" className="text-sm text-gray-400 hover:text-white transition">FAQs</a></li>
               </ul>
             </div>
 
