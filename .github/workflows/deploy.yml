@@ -1,0 +1,157 @@
+# LoadMoveGH — CI/CD Pipeline
+# Runs on every push to main and on PRs
+# Backend + AI deploy via Railway auto-deploy (linked to GitHub)
+# Frontend deploys via Vercel auto-deploy (linked to GitHub)
+
+name: LoadMoveGH CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Lint & Test Backend ───────────────────────────────────
+  test-api:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: api/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx ruff
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+        env:
+          APP_ENV: test
+          DEBUG: false
+          DATABASE_URL: sqlite+aiosqlite:///test.db
+          JWT_SECRET_KEY: test-secret-key-for-ci-only-not-production
+          JWT_REFRESH_SECRET_KEY: test-refresh-secret-for-ci-only
+          OPENAI_API_KEY: sk-test-not-real
+
+  # ── Lint & Build Frontend ─────────────────────────────────
+  test-web:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.loadmovegh.com/api/v1
+
+  # ── Analyze & Test Mobile ─────────────────────────────────
+  test-mobile:
+    name: Flutter Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        run: flutter test
+
+  # ── Security Scan ─────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          extra_args: --only-verified
+
+      - name: Python dependency audit
+        run: |
+          pip install pip-audit
+          pip-audit -r api/requirements.txt || true
+
+      - name: Node dependency audit
+        run: cd web && npm audit --production || true
+
+  # ── Build Mobile Release (only on main) ───────────────────
+  build-android:
+    name: Build Android AAB
+    needs: [test-api, test-web, test-mobile, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build AAB
+        run: |
+          flutter build appbundle --release \
+            --dart-define=API_BASE_URL=https://api.loadmovegh.com \
+            --dart-define=GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: loadmovegh-release-aab
+          path: mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
