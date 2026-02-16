@@ -31,11 +31,11 @@ export default function AdminLoginPage() {
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       localStorage.setItem(
         "loadmovegh_admin",
-        JSON.stringify({ email, role: "admin", token: "admin_demo_token", loggedInAt: new Date().toISOString() })
+        JSON.stringify({ email, name: "System Admin", role: "admin", token: "admin_demo_token", loggedInAt: new Date().toISOString() })
       );
       router.push("/dashboard");
     } else {
-      setError("Invalid admin credentials");
+      setError("Invalid credentials. Only admin accounts can access this console.");
       setLoading(false);
     }
   }

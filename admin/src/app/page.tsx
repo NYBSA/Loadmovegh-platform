@@ -3,16 +3,25 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+const ADMIN_ROLES = ["super_admin", "admin"];
+
 export default function AdminRoot() {
   const router = useRouter();
 
   useEffect(() => {
-    const auth = localStorage.getItem("loadmovegh_admin");
-    if (auth) {
-      router.replace("/dashboard");
-    } else {
-      router.replace("/login");
+    const stored = localStorage.getItem("loadmovegh_admin");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (ADMIN_ROLES.includes(parsed.role)) {
+          router.replace("/dashboard");
+          return;
+        }
+      } catch {
+        /* invalid data — fall through to login */
+      }
     }
+    router.replace("/login");
   }, [router]);
 
   return (

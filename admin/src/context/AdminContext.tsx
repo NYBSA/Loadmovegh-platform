@@ -30,10 +30,13 @@ export interface Notification {
   read: boolean;
 }
 
+const ADMIN_ROLES: AdminRole[] = ["super_admin", "admin"];
+
 interface AdminContextValue {
   /* Auth */
   user: AdminUser | null;
   isAuthenticated: boolean;
+  hasAdminAccess: boolean;
   logout: () => void;
 
   /* Sidebar */
@@ -84,18 +87,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
   const [activeSection, setActiveSection] = useState("overview");
 
-  /* Hydrate auth from localStorage */
+  /* Hydrate auth from localStorage — only accept admin roles */
   useEffect(() => {
     const stored = localStorage.getItem("loadmovegh_admin");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setUser({
-          email: parsed.email || "admin@loadmovegh.com",
-          name: parsed.name || "System Admin",
-          role: parsed.role || "super_admin",
-        });
+        const role: AdminRole = parsed.role || "viewer";
+        if (ADMIN_ROLES.includes(role)) {
+          setUser({
+            email: parsed.email || "admin@loadmovegh.com",
+            name: parsed.name || "System Admin",
+            role,
+          });
+        } else {
+          localStorage.removeItem("loadmovegh_admin");
+          setUser(null);
+        }
       } catch {
+        localStorage.removeItem("loadmovegh_admin");
         setUser(null);
       }
     }
@@ -157,6 +167,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const hasAdminAccess = !!user && ADMIN_ROLES.includes(user.role);
 
   if (isLoading) {
     return (
@@ -171,6 +182,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
+        hasAdminAccess,
         logout,
         sidebarOpen,
         sidebarCollapsed,
