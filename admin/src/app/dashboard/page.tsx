@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import AdminLayout from "@/components/AdminLayout";
+import { useAdmin } from "@/context/AdminContext";
 
 /* ═══════════════════════════════════════════════════════════════
    MOCK DATA — OVERVIEW
@@ -109,33 +110,8 @@ const COMPLIANCE_ITEMS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════
-   NAV ITEMS
-   ═══════════════════════════════════════════════════════════════ */
-
-type Section = "overview" | "users" | "fraud" | "revenue" | "loads" | "regions" | "commission" | "compliance";
-
-const NAV: { key: Section; label: string; icon: JSX.Element }[] = [
-  { key: "overview", label: "Overview", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /> },
-  { key: "users", label: "User Approvals", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /> },
-  { key: "fraud", label: "Fraud Alerts", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /> },
-  { key: "revenue", label: "Revenue", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" /> },
-  { key: "loads", label: "Load Analytics", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /> },
-  { key: "regions", label: "Regional Map", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" /> },
-  { key: "commission", label: "Commissions", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /> },
-  { key: "compliance", label: "Compliance", icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /> },
-];
-
-/* ═══════════════════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════════════════ */
-
-function SvgIcon({ children }: { children: React.ReactNode }) {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      {children}
-    </svg>
-  );
-}
 
 function MiniBar({ data, color, height = 28 }: { data: number[]; color: string; height?: number }) {
   const max = Math.max(...data);
@@ -153,33 +129,7 @@ function MiniBar({ data, color, height = 28 }: { data: number[]; color: string; 
    ═══════════════════════════════════════════════════════════════ */
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [authed, setAuthed] = useState(false);
-  const [section, setSection] = useState<Section>("overview");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    const auth = localStorage.getItem("loadmovegh_admin");
-    if (!auth) {
-      router.replace("/login");
-    } else {
-      setAuthed(true);
-    }
-  }, [router]);
-
-  function handleLogout() {
-    localStorage.removeItem("loadmovegh_admin");
-    router.push("/login");
-  }
-
-  if (!authed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-700 border-t-brand-500" />
-      </div>
-    );
-  }
-
+  const { activeSection: section, setActiveSection: setSection } = useAdmin();
   const maxRev = Math.max(...REVENUE_MONTHLY.map((r) => r.revenue));
   const maxLoad = Math.max(...LOAD_VOLUME.map((l) => l.count));
 
@@ -198,77 +148,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* ── Mobile sidebar overlay ────────────────────── */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}>
-          <div className="absolute inset-0 bg-black/30" />
-        </div>
-      )}
-
-      {/* ── Sidebar ───────────────────────────────────── */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 transition-transform lg:translate-x-0 lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex h-14 items-center gap-2 px-5 border-b border-gray-800">
-          <a href="https://www.loadmovegh.com" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-brand-500 flex items-center justify-center">
-              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
-            </div>
-            <span className="font-bold text-white">LoadMove<span className="text-brand-400">GH</span></span>
-          </a>
-        </div>
-        <div className="px-3 pt-3 pb-2">
-          <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">Admin Console</p>
-        </div>
-        <nav className="px-3 space-y-0.5">
-          {NAV.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => { setSection(item.key); setSidebarOpen(false); }}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${section === item.key ? "bg-gray-800 text-white" : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"}`}
-            >
-              <SvgIcon>{item.icon}</SvgIcon>
-              {item.label}
-              {item.key === "fraud" && <span className="ml-auto badge-red text-[10px]">7</span>}
-              {item.key === "users" && <span className="ml-auto badge-yellow text-[10px]">6</span>}
-              {item.key === "compliance" && <span className="ml-auto bg-orange-50 text-orange-700 ring-1 ring-orange-600/20 badge text-[10px]">3</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-brand-600 flex items-center justify-center text-sm font-bold text-white">SA</div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">System Admin</p>
-              <p className="text-xs text-gray-500 truncate">admin@loadmovegh.com</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600/10 border border-red-800/30 px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-            </svg>
-            Log Out
-          </button>
-        </div>
-      </aside>
-
-      {/* ── Main Content ──────────────────────────────── */}
-      <div className="flex-1 min-w-0">
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-gray-200 bg-white px-4 sm:px-6">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-700">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
-          </button>
-          <h1 className="text-lg font-bold text-gray-900 capitalize">{section === "overview" ? "Dashboard Overview" : NAV.find((n) => n.key === section)?.label}</h1>
-          <div className="ml-auto flex items-center gap-3">
-            <span className="text-xs text-gray-400 hidden sm:block">Last refresh: just now</span>
-            <button className="btn-secondary text-xs py-1.5 px-3">Export</button>
-          </div>
-        </header>
-
-        <main className="p-4 sm:p-6 max-w-[1400px]">
+    <AdminLayout>
+      <div>
 
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
               SECTION: OVERVIEW
@@ -280,7 +161,7 @@ export default function AdminDashboard() {
                 {KPI.map((k) => (
                   <div key={k.label} className="card">
                     <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{k.label}</p>
-                    <p className="mt-1.5 text-xl font-bold text-gray-900">{k.value}</p>
+                    <p className="mt-1.5 text-xl font-bold text-gray-900 dark:text-white">{k.value}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <span className={`text-xs font-medium ${k.up && k.label !== "Fraud Alerts" ? "text-emerald-600" : "text-red-600"}`}>{k.delta}</span>
                       <span className="text-[10px] text-gray-400">{k.sub}</span>
@@ -751,8 +632,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-        </main>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

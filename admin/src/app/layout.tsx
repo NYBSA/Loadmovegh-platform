@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AdminProvider } from "@/context/AdminContext";
 
 export const metadata: Metadata = {
   title: "LoadMoveGH Admin — Management Console",
@@ -13,8 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen font-sans">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen font-sans">
+        <AdminProvider>{children}</AdminProvider>
+      </body>
     </html>
   );
 }
