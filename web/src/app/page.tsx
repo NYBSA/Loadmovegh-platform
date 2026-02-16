@@ -143,11 +143,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-brand-600 flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                </svg>
-              </div>
+              <Image src="/logo.png" alt="LoadMoveGH" width={48} height={48} className="h-10 w-auto object-contain" />
               <span className="text-xl font-bold text-gray-900">
                 LoadMove<span className="text-brand-600">GH</span>
               </span>
@@ -967,9 +963,7 @@ export default function HomePage() {
         {/* Bottom copyright */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-brand-600 flex items-center justify-center">
-              <span className="text-xs font-black text-white">LM</span>
-            </div>
+            <Image src="/logo.png" alt="LoadMoveGH" width={36} height={36} className="h-8 w-auto object-contain" />
             <span className="text-sm font-bold text-white">
               LoadMove<span className="text-brand-400">GH</span>
             </span>

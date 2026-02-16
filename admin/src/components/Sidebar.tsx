@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAdmin, type AdminRole } from "@/context/AdminContext";
 
 /* ── Menu Structure ──────────────────────────────── */
@@ -176,11 +177,7 @@ export default function Sidebar() {
         {/* ── Header ────────────────────────────────── */}
         <div className={`flex h-16 items-center border-b border-gray-800 ${sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"}`}>
           <a href="https://www.loadmovegh.com" className="flex items-center gap-2.5 min-w-0">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-brand-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-500/20">
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-              </svg>
-            </div>
+            <Image src="/logo.png" alt="LoadMoveGH" width={40} height={40} className="h-9 w-auto object-contain flex-shrink-0" />
             {!sidebarCollapsed && (
               <span className="font-bold text-white text-lg truncate">
                 LoadMove<span className="text-brand-400">GH</span>
