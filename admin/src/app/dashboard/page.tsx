@@ -10,7 +10,8 @@ import { useAdmin } from "@/context/AdminContext";
 
 const KPI = [
   { label: "Total Revenue", value: "GHS 2.84M", delta: "+12.3%", up: true, sub: "Last 30 days" },
-  { label: "Active Users", value: "4,812", delta: "+8.1%", up: true, sub: "Shippers + Couriers" },
+  { label: "Total Couriers", value: "2,847", delta: "+9.4%", up: true, sub: "Registered couriers" },
+  { label: "Total Shippers", value: "1,965", delta: "+6.7%", up: true, sub: "Registered shippers" },
   { label: "Loads This Month", value: "1,247", delta: "+15.6%", up: true, sub: "vs 1,079 last month" },
   { label: "Platform Commission", value: "GHS 142K", delta: "+11.9%", up: true, sub: "5% avg rate" },
   { label: "Open Disputes", value: "23", delta: "-4.2%", up: false, sub: "18 under review" },
@@ -400,14 +401,15 @@ export default function AdminDashboard() {
           {section === "overview" && (
             <div className="space-y-6">
               {/* KPI Cards — clickable, navigate to respective sections */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                 {[
                   { ...KPI[0], icon: "💰", goto: "revenue", color: "border-emerald-500" },
-                  { ...KPI[1], icon: "👥", goto: "users", color: "border-blue-500" },
-                  { ...KPI[2], icon: "📦", goto: "loads", color: "border-brand-500" },
-                  { ...KPI[3], icon: "📊", goto: "commission", color: "border-violet-500" },
-                  { ...KPI[4], icon: "⚠️", goto: "compliance", color: "border-amber-500" },
-                  { ...KPI[5], icon: "🛡️", goto: "fraud", color: "border-red-500" },
+                  { ...KPI[1], icon: "🚛", goto: "users", color: "border-blue-500" },
+                  { ...KPI[2], icon: "🏢", goto: "users", color: "border-teal-500" },
+                  { ...KPI[3], icon: "📦", goto: "loads", color: "border-brand-500" },
+                  { ...KPI[4], icon: "📊", goto: "commission", color: "border-violet-500" },
+                  { ...KPI[5], icon: "⚠️", goto: "compliance", color: "border-amber-500" },
+                  { ...KPI[6], icon: "🛡️", goto: "fraud", color: "border-red-500" },
                 ].map((k) => (
                   <div
                     key={k.label}
