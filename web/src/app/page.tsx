@@ -685,38 +685,34 @@ export default function HomePage() {
 
         {/* ── Success Stories ───────────────────────────── */}
         <section className="py-16">
-          <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl mb-3">Success Stories</h2>
-          <p className="text-center text-sm text-gray-500 mb-12 max-w-xl mx-auto">Hear from real businesses and couriers who are growing with LoadMoveGH</p>
+          <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl mb-12">Success Stories</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { name: "Kwame Mensah", role: "Fleet Owner", company: "Mensah Haulage Ltd", location: "Accra", quote: "LoadMoveGH means we never have to say no to a customer. Our trucks are always loaded.", highlight: "never have to say no", date: "12.01.2026", initials: "KM", color: "from-brand-700 to-purple-600" },
-              { name: "Abena Osei-Bonsu", role: "Operations Manager", company: "GoldCoast Shipping", location: "Kumasi", quote: "LoadMoveGH has opened a lot of doors for us. We doubled our deliveries in 6 months.", highlight: "opened a lot of doors", date: "28.11.2025", initials: "AO", color: "from-accent-600 to-yellow-500" },
-              { name: "Yaw Asante", role: "Independent Courier", company: "Celebrating 1 year on the platform", location: "Tamale", quote: "It'd be impossible to do it any other way. The AI pricing helps me win more bids.", highlight: "impossible to do it any other way", date: "05.09.2025", initials: "YA", color: "from-blue-700 to-indigo-600" },
-              { name: "Efua Darko", role: "CEO", company: "Darko Logistics Group", location: "Takoradi", quote: "It's a perfect business model. Escrow payments gave us the trust we needed to scale.", highlight: "perfect business model", date: "18.07.2025", initials: "ED", color: "from-brand-800 to-violet-600" },
+              { name: "Kwame Mensah", role: "Fleet Owner", company: "Mensah Haulage Ltd", subtitle: "Turning flexibility into growth with LM", image: "/stories/kwame.jpg", quote: "LM means we never have to say no to a customer.", highlight: "never have to say no", date: "07.11.2025" },
+              { name: "Abena Osei-Bonsu", role: "Operations Manager", company: "GoldCoast Shipping", subtitle: "Celebrating 1 year on the Exchange", image: "/stories/abena.jpg", quote: "LM has opened a lot of doors for us.", highlight: "opened a lot of doors", date: "15.08.2025" },
+              { name: "Yaw Asante", role: "Independent Courier", company: "Asante Logistics", subtitle: "Celebrating 5 years on the Exchange", image: "/stories/yaw.jpg", quote: "It'd be impossible to do it any other way.", highlight: "impossible", date: "15.04.2025" },
+              { name: "Efua Darko", role: "CEO", company: "Darko Logistics Group", subtitle: "Celebrating 15 years on the Exchange", image: "/stories/efua.jpg", quote: "It's a perfect business model.", highlight: "perfect business model", date: "11.04.2025" },
             ].map((story) => (
-              <div key={story.name} className="group rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
-                <div className={`relative h-48 bg-gradient-to-br ${story.color} p-6 flex flex-col justify-between`}>
-                  <div className="flex items-start gap-3">
-                    <div className="h-14 w-14 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg font-bold text-white">{story.initials}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-white">{story.name}</p>
-                      <p className="text-xs text-white/70">{story.location}</p>
-                    </div>
+              <div key={story.name} className="group rounded-2xl bg-brand-50 border border-brand-100 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                {/* Photo with quote overlay */}
+                <div className="relative h-52 overflow-hidden">
+                  <img src={story.image} alt={story.name} className="w-full h-full object-cover object-top" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="text-sm text-white/95 leading-snug italic">
+                      &ldquo;{story.quote.split(story.highlight)[0]}
+                      <span className="font-bold text-accent-300 not-italic">{story.highlight}</span>
+                      {story.quote.split(story.highlight)[1]}&rdquo;
+                    </p>
                   </div>
-                  <p className="text-sm text-white/95 leading-snug">
-                    &ldquo;{story.quote.split(story.highlight)[0]}
-                    <span className="font-bold text-accent-300">{story.highlight}</span>
-                    {story.quote.split(story.highlight)[1]}&rdquo;
-                  </p>
                 </div>
+                {/* Card body */}
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">Success stories</span>
+                    <span className="inline-flex items-center rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-medium text-gray-600">Success stories</span>
                     <span className="text-xs text-gray-400">{story.date}</span>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 leading-snug">{story.company}: {story.role}</p>
+                  <p className="text-sm font-semibold text-gray-900 leading-snug">{story.company}: {story.subtitle}</p>
                 </div>
               </div>
             ))}
