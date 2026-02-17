@@ -172,6 +172,16 @@ export default function AdminDashboard() {
   const [rejectConfirm, setRejectConfirm] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
+  /* ── User filter state ──────────────────────────────────── */
+  const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const filteredUsers = users.filter((u) => {
+    if (filterType !== "all" && u.type !== filterType) return false;
+    if (filterStatus !== "all" && u.kyc !== filterStatus) return false;
+    return true;
+  });
+
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
@@ -335,13 +345,31 @@ export default function AdminDashboard() {
           {section === "users" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500 dark:text-gray-400">{users.filter((u) => u.kyc === "pending").length} users pending review &middot; {users.length} total</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {filteredUsers.length} user{filteredUsers.length !== 1 ? "s" : ""} shown &middot; {users.filter((u) => u.kyc === "pending").length} pending
+                </p>
                 <div className="flex gap-2">
-                  <select className="input py-1.5 text-xs w-32"><option>All Types</option><option>Shipper</option><option>Courier</option></select>
-                  <select className="input py-1.5 text-xs w-32"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+                  <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input py-1.5 text-xs w-32">
+                    <option value="all">All Types</option>
+                    <option value="shipper">Shipper</option>
+                    <option value="courier">Courier</option>
+                  </select>
+                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input py-1.5 text-xs w-32">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
                 </div>
               </div>
-              {users.map((u) => (
+              {filteredUsers.length === 0 ? (
+                <div className="card text-center py-10">
+                  <svg className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                  <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">No users match filters</p>
+                  <p className="text-xs text-gray-400 mt-1">Try changing the type or status filter.</p>
+                </div>
+              ) : null}
+              {filteredUsers.map((u) => (
                 <div key={u.id} className={`card-hover transition-all ${u.kyc === "approved" ? "border-l-4 border-l-emerald-500" : u.kyc === "rejected" ? "border-l-4 border-l-red-400 opacity-75" : ""}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
