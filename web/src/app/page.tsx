@@ -143,7 +143,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <Image src="/logo.png" alt="LoadMoveGH" width={48} height={48} className="h-10 w-auto object-contain" />
+              <img src="/logo.png" alt="LoadMoveGH" width={48} height={48} className="h-10 w-auto object-contain" />
               <span className="text-xl font-bold text-gray-900">
                 LoadMove<span className="text-brand-600">GH</span>
               </span>
@@ -954,7 +954,7 @@ export default function HomePage() {
         {/* Bottom copyright */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="LoadMoveGH" width={36} height={36} className="h-8 w-auto object-contain" />
+            <img src="/logo.png" alt="LoadMoveGH" width={36} height={36} className="h-8 w-auto object-contain" />
             <span className="text-sm font-bold text-white">
               LoadMove<span className="text-brand-400">GH</span>
             </span>

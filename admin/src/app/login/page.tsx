@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 const ADMIN_EMAIL = "admin@loadmovegh.com";
 const ADMIN_PASSWORD = "admin1954";
@@ -52,7 +51,7 @@ export default function AdminLoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.png" alt="LoadMoveGH" width={80} height={80} className="h-20 w-auto object-contain mb-4" />
+          <img src="/logo.png" alt="LoadMoveGH" width={80} height={80} className="h-20 w-auto object-contain mb-4" />
           <h1 className="text-2xl font-bold text-white">
             LoadMove<span className="text-brand-400">GH</span>
           </h1>
