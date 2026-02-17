@@ -162,7 +162,7 @@ const USER_DOCS: Record<string, { name: string; type: string; size: string; uplo
 };
 
 export default function AdminDashboard() {
-  const { activeSection: section, setActiveSection: setSection } = useAdmin();
+  const { activeSection: section, setActiveSection: setSection, darkMode } = useAdmin();
   const maxRev = Math.max(...REVENUE_MONTHLY.map((r) => r.revenue));
   const maxLoad = Math.max(...LOAD_VOLUME.map((l) => l.count));
 
@@ -1616,6 +1616,210 @@ export default function AdminDashboard() {
           )}
 
       </div>
+
+          {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+              SECTION: SETTINGS
+              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+          {(section === "settings" || section === "settings-general" || section === "settings-roles" || section === "settings-api" || section === "settings-audit") && (
+            <div className="space-y-6">
+              {/* Settings Tabs */}
+              <div className="flex gap-1 border-b border-gray-200 dark:border-gray-800">
+                {[
+                  { id: "settings", label: "General" },
+                  { id: "settings-roles", label: "Roles & Permissions" },
+                  { id: "settings-api", label: "API Keys" },
+                  { id: "settings-audit", label: "Audit Log" },
+                ].map((tab) => (
+                  <button key={tab.id} onClick={() => setSection(tab.id)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition ${section === tab.id || (section === "settings-general" && tab.id === "settings") ? "border-brand-500 text-brand-600 dark:text-brand-400" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* General Settings */}
+              {(section === "settings" || section === "settings-general") && (
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <div className="card">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Platform Settings</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="label">Platform Name</label>
+                        <input type="text" defaultValue="LoadMoveGH" className="input w-full" />
+                      </div>
+                      <div>
+                        <label className="label">Support Email</label>
+                        <input type="email" defaultValue="support@loadmovegh.com" className="input w-full" />
+                      </div>
+                      <div>
+                        <label className="label">Support Phone</label>
+                        <input type="tel" defaultValue="+233 557 542 254" className="input w-full" />
+                      </div>
+                      <div>
+                        <label className="label">Default Commission Rate (%)</label>
+                        <input type="number" defaultValue="5.0" step="0.1" className="input w-full" />
+                      </div>
+                      <div>
+                        <label className="label">Currency</label>
+                        <select className="input w-full" defaultValue="GHS">
+                          <option value="GHS">GHS - Ghana Cedi</option>
+                          <option value="USD">USD - US Dollar</option>
+                          <option value="NGN">NGN - Nigerian Naira</option>
+                        </select>
+                      </div>
+                      <button onClick={() => showToast("Platform settings saved.", "success")} className="btn-primary text-sm w-full mt-2">Save Changes</button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="card">
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Notifications</h3>
+                      <div className="space-y-3">
+                        {[
+                          { label: "Email notifications for new signups", defaultChecked: true },
+                          { label: "SMS alerts for critical fraud detection", defaultChecked: true },
+                          { label: "Daily revenue summary email", defaultChecked: false },
+                          { label: "Weekly compliance report", defaultChecked: true },
+                          { label: "Real-time load matching alerts", defaultChecked: false },
+                        ].map((n) => (
+                          <label key={n.label} className="flex items-center justify-between cursor-pointer group">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition">{n.label}</span>
+                            <input type="checkbox" defaultChecked={n.defaultChecked} className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-brand-600 focus:ring-brand-500" />
+                          </label>
+                        ))}
+                      </div>
+                      <button onClick={() => showToast("Notification preferences saved.", "success")} className="btn-secondary text-sm w-full mt-4">Update Preferences</button>
+                    </div>
+
+                    <div className="card">
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Appearance</h3>
+                      <div className="space-y-3">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded ${darkMode ? "bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400" : "bg-gray-100 dark:bg-gray-800 text-gray-500"}`}>{darkMode ? "Enabled" : "Disabled"}</span>
+                        </label>
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">Sidebar collapsed by default</span>
+                          <input type="checkbox" className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-brand-600 focus:ring-brand-500" />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Roles & Permissions */}
+              {section === "settings-roles" && (
+                <div className="card">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Roles & Permissions</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 dark:border-gray-800">
+                          <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Role</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Users</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Loads</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Fraud</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Settings</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { role: "Super Admin", users: true, revenue: true, loads: true, fraud: true, settings: true },
+                          { role: "Admin", users: true, revenue: true, loads: true, fraud: true, settings: false },
+                          { role: "Analyst", users: false, revenue: true, loads: true, fraud: false, settings: false },
+                          { role: "Support", users: true, revenue: false, loads: false, fraud: true, settings: false },
+                        ].map((r) => (
+                          <tr key={r.role} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                            <td className="py-3 px-3 font-medium text-gray-900 dark:text-white">{r.role}</td>
+                            {[r.users, r.revenue, r.loads, r.fraud, r.settings].map((perm, i) => (
+                              <td key={i} className="py-3 px-3 text-center">
+                                {perm ? (
+                                  <svg className="h-5 w-5 text-emerald-500 mx-auto" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                ) : (
+                                  <svg className="h-5 w-5 text-gray-300 dark:text-gray-600 mx-auto" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                                )}
+                              </td>
+                            ))}
+                            <td className="py-3 px-3 text-center">
+                              <button onClick={() => showToast(`${r.role} permissions updated.`, "success")} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">Edit</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* API Keys */}
+              {section === "settings-api" && (
+                <div className="card">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">API Keys</h3>
+                    <button onClick={() => showToast("New API key generated.", "success")} className="btn-primary text-xs">Generate New Key</button>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { name: "Production Key", key: "lmg_prod_****************************a4f7", created: "Jan 15, 2026", status: "active" },
+                      { name: "Staging Key", key: "lmg_stg_*****************************b2e1", created: "Dec 20, 2025", status: "active" },
+                      { name: "Mobile App Key", key: "lmg_mob_****************************c9d3", created: "Feb 01, 2026", status: "active" },
+                      { name: "Webhook Secret", key: "lmg_whk_****************************e1f5", created: "Nov 10, 2025", status: "revoked" },
+                    ].map((k) => (
+                      <div key={k.name} className="flex items-center gap-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{k.name}</p>
+                            <span className={k.status === "active" ? "badge-green" : "badge-red"}>{k.status}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 font-mono mt-0.5">{k.key}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">Created: {k.created}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => showToast("API key copied to clipboard.", "info")} className="btn-secondary text-xs py-1 px-2">Copy</button>
+                          {k.status === "active" && (
+                            <button onClick={() => showToast(`${k.name} has been revoked.`, "error")} className="text-xs text-red-600 dark:text-red-400 hover:underline font-medium">Revoke</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Audit Log */}
+              {section === "settings-audit" && (
+                <div className="card">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Audit Log</h3>
+                  <div className="space-y-2">
+                    {[
+                      { action: "User approved", detail: "Kofi Transport Ltd (U-401)", admin: "System Admin", time: "2 min ago", type: "success" },
+                      { action: "Fraud alert investigated", detail: "Alert FA-003 — Suspicious bidding", admin: "System Admin", time: "15 min ago", type: "warning" },
+                      { action: "Commission collected", detail: "Trip #TRK-2241 — GHS 82.50", admin: "System Admin", time: "1 hour ago", type: "info" },
+                      { action: "Settings updated", detail: "Commission rate changed to 5.0%", admin: "System Admin", time: "3 hours ago", type: "info" },
+                      { action: "User rejected", detail: "Cape Coast Movers (U-404)", admin: "System Admin", time: "5 hours ago", type: "error" },
+                      { action: "CSV exported", detail: "Revenue report — 6 months", admin: "System Admin", time: "Yesterday", type: "info" },
+                      { action: "Admin logged in", detail: "From Accra, Ghana (IP: 41.190.xx.xx)", admin: "System Admin", time: "Yesterday", type: "info" },
+                      { action: "API key generated", detail: "Mobile App Key (lmg_mob_****)", admin: "System Admin", time: "Feb 1, 2026", type: "info" },
+                    ].map((log, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                        <div className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${log.type === "success" ? "bg-emerald-500" : log.type === "warning" ? "bg-amber-500" : log.type === "error" ? "bg-red-500" : "bg-blue-500"}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{log.detail}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-xs text-gray-500">{log.admin}</p>
+                          <p className="text-[10px] text-gray-400">{log.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
       {/* ── Toast Notification ─────────────────────── */}
       {toast && (
