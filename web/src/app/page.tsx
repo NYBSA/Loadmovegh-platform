@@ -177,31 +177,31 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-cream-100">
       {/* ── Navbar ─────────────────────────────────────── */}
-      <nav className="border-b border-accent-200/50 bg-cream-100/80 backdrop-blur-sm sticky top-0 z-50">
+      <nav className="border-b border-brand-800 bg-brand-900 sticky top-0 z-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="LoadMoveGH" width={48} height={48} className="h-10 w-auto object-contain" />
-              <span className="text-xl font-bold text-gray-900">
-                LoadMove<span className="text-brand-700">GH</span>
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="LoadMoveGH" width={64} height={64} className="h-14 w-auto object-contain" />
+              <span className="text-xl font-bold text-white">
+                LoadMove<span className="text-accent-400">GH</span>
               </span>
             </div>
             <div className="flex items-center gap-3">
               {isAuthenticated && user ? (
                 <>
                   <Link href={`/${user.role}/dashboard`}
-                    className="hidden sm:flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-brand-700 transition">
-                    <span className="h-7 w-7 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-800">
+                    className="hidden sm:flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition">
+                    <span className="h-7 w-7 rounded-full bg-brand-700 flex items-center justify-center text-xs font-bold text-white">
                       {user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                     </span>
                     <span className="max-w-[120px] truncate">{user.fullName}</span>
                   </Link>
-                  <Link href={`/${user.role}/dashboard`} className="btn-secondary text-sm">Dashboard</Link>
+                  <Link href={`/${user.role}/dashboard`} className="inline-flex items-center justify-center rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 transition">Dashboard</Link>
                   <button onClick={() => { logout(); router.push("/"); }} className="btn-primary text-sm !bg-red-500 hover:!bg-red-600 !text-white">Logout</button>
                 </>
               ) : (
                 <>
-                  <button onClick={() => scrollToAuth("courier", "login")} className="btn-secondary text-sm">Courier Login</button>
+                  <button onClick={() => scrollToAuth("courier", "login")} className="inline-flex items-center justify-center rounded-full bg-white/10 px-5 py-2 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 transition">Courier Login</button>
                   <button onClick={() => scrollToAuth("shipper", "login")} className="btn-primary text-sm">Shipper Login</button>
                 </>
               )}
@@ -794,7 +794,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="LoadMoveGH" width={36} height={36} className="h-8 w-auto object-contain" />
+            <img src="/logo.png" alt="LoadMoveGH" width={48} height={48} className="h-10 w-auto object-contain" />
             <span className="text-sm font-bold text-white">LoadMove<span className="text-brand-400">GH</span></span>
           </div>
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} LoadMoveGH Ltd. All rights reserved. Built for Ghana&apos;s freight industry.</p>

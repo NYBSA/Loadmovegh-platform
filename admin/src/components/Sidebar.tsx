@@ -176,7 +176,7 @@ export default function Sidebar() {
         {/* ── Header ────────────────────────────────── */}
         <div className={`flex h-16 items-center border-b border-gray-800 ${sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"}`}>
           <a href="https://www.loadmovegh.com" className="flex items-center gap-2.5 min-w-0">
-            <img src="/logo.png" alt="LoadMoveGH" width={40} height={40} className="h-9 w-auto object-contain flex-shrink-0" />
+            <img src="/logo.png" alt="LoadMoveGH" width={52} height={52} className="h-12 w-auto object-contain flex-shrink-0" />
             {!sidebarCollapsed && (
               <span className="font-bold text-white text-lg truncate">
                 LoadMove<span className="text-brand-400">GH</span>
