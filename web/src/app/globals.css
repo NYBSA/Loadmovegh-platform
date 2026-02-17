@@ -4,11 +4,12 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #0f172a;
+    --background: #FFFDE7;
+    --foreground: #1a1a2e;
   }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    background-color: #FFFDE7;
+    @apply text-gray-900 antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -39,10 +40,13 @@
     @apply badge bg-gray-50 text-gray-600 ring-1 ring-gray-500/20;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full bg-accent-400 px-6 py-2.5 text-sm font-bold text-gray-900 shadow-sm transition hover:bg-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-gray-300 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+  }
+  .btn-purple {
+    @apply inline-flex items-center justify-center rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50;
   }
   .input {
     @apply block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition;
@@ -136,7 +140,7 @@
 }
 
 .vehicle-card:hover .vehicle-name {
-  color: #0d6a3c;
+  color: #6d28d9;
   transform: scale(1.05);
 }
 
