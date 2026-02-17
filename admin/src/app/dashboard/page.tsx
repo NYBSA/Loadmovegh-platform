@@ -189,6 +189,32 @@ export default function AdminDashboard() {
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
+  /* ── Revenue state ────────────────────────────────────── */
+  const [revTimePeriod, setRevTimePeriod] = useState("6m");
+  const [selectedRevMonth, setSelectedRevMonth] = useState<string | null>(null);
+  const [revView, setRevView] = useState<"chart" | "table">("chart");
+
+  const revData = revTimePeriod === "3m" ? REVENUE_MONTHLY.slice(-3) : REVENUE_MONTHLY;
+  const totalRevenue = revData.reduce((a, r) => a + r.revenue, 0);
+  const totalCommission = revData.reduce((a, r) => a + r.commission, 0);
+  const avgTripValue = Math.round(totalRevenue / revData.reduce((_, __, i) => i + 1, 0) / 380);
+  const commissionRate = ((totalCommission / totalRevenue) * 100).toFixed(1);
+
+  function handleExportRevenueCSV() {
+    const header = "Month,Revenue (GHS),Commission (GHS),Commission Rate,Net Revenue (GHS)";
+    const rows = REVENUE_MONTHLY.map((r) => `${r.month},${r.revenue},${r.commission},${((r.commission / r.revenue) * 100).toFixed(1)}%,${r.revenue - r.commission}`);
+    const totRow = `Total,${totalRevenue},${totalCommission},${commissionRate}%,${totalRevenue - totalCommission}`;
+    const csv = [header, ...rows, totRow].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "loadmovegh-revenue.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Revenue CSV exported.", "success");
+  }
+
   /* ── Load Analytics state ──────────────────────────────── */
   const [loadTimePeriod, setLoadTimePeriod] = useState("6m");
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
@@ -692,39 +718,171 @@ export default function AdminDashboard() {
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           {section === "revenue" && (
             <div className="space-y-6">
+              {/* Live KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Total Revenue (6mo)", value: "GHS 1.54M", delta: "+12%" },
-                  { label: "Total Commission", value: "GHS 77K", delta: "+11%" },
-                  { label: "Avg Trip Value", value: "GHS 2,280", delta: "+5%" },
-                  { label: "Commission Rate", value: "5.0%", delta: "Flat" },
+                  { label: `Total Revenue (${revTimePeriod === "3m" ? "3mo" : "6mo"})`, value: `GHS ${(totalRevenue / 1000000).toFixed(2)}M`, delta: "+12%", icon: "💰", color: "text-emerald-600" },
+                  { label: "Total Commission", value: `GHS ${(totalCommission / 1000).toFixed(0)}K`, delta: "+11%", icon: "📊", color: "text-blue-600" },
+                  { label: "Avg Trip Value", value: `GHS ${avgTripValue.toLocaleString()}`, delta: "+5%", icon: "🚛", color: "text-amber-600" },
+                  { label: "Commission Rate", value: `${commissionRate}%`, delta: "Flat", icon: "📈", color: "text-violet-600" },
                 ].map((s) => (
-                  <div key={s.label} className="card">
-                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{s.label}</p>
-                    <p className="mt-1 text-xl font-bold text-gray-900">{s.value}</p>
-                    <p className="text-xs text-emerald-600 mt-0.5">{s.delta}</p>
+                  <div key={s.label} className="card hover:shadow-md transition">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{s.label}</p>
+                      <span className="text-lg">{s.icon}</span>
+                    </div>
+                    <p className={`mt-1 text-xl font-bold text-gray-900 dark:text-white`}>{s.value}</p>
+                    <p className={`text-xs mt-0.5 font-medium ${s.color}`}>{s.delta}</p>
                   </div>
                 ))}
               </div>
 
+              {/* Revenue Chart / Table Toggle */}
               <div className="card">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4">Revenue vs Commission (6 months)</h3>
-                <div className="flex items-end gap-4 h-52">
-                  {REVENUE_MONTHLY.map((r) => (
-                    <div key={r.month} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[10px] text-gray-500">{(r.revenue / 1000).toFixed(0)}k</span>
-                      <div className="w-full flex gap-1">
-                        <div className="flex-1 rounded-t bg-brand-500" style={{ height: `${(r.revenue / maxRev) * 200}px` }} />
-                        <div className="flex-1 rounded-t bg-accent-400" style={{ height: `${(r.commission / maxRev) * 200}px` }} />
-                      </div>
-                      <span className="text-[10px] text-gray-400">{r.month}</span>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Revenue vs Commission</h3>
+                  <div className="flex items-center gap-3">
+                    {/* Chart / Table toggle */}
+                    <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-[10px]">
+                      <button onClick={() => setRevView("chart")} className={`px-2.5 py-1 transition font-medium ${revView === "chart" ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>Chart</button>
+                      <button onClick={() => setRevView("table")} className={`px-2.5 py-1 transition font-medium ${revView === "table" ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>Table</button>
                     </div>
-                  ))}
+                    {/* Time period toggle */}
+                    <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-[10px]">
+                      {[{ label: "3M", val: "3m" }, { label: "6M", val: "6m" }].map((p) => (
+                        <button key={p.val} onClick={() => { setRevTimePeriod(p.val); setSelectedRevMonth(null); }} className={`px-2.5 py-1 transition font-medium ${revTimePeriod === p.val ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>{p.label}</button>
+                      ))}
+                    </div>
+                    <button onClick={handleExportRevenueCSV} className="btn-secondary text-[10px] py-1 px-2.5 flex items-center gap-1">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      CSV
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100">
-                  <div className="flex items-center gap-2 text-xs text-gray-500"><div className="h-2.5 w-2.5 rounded bg-brand-500" /> Revenue</div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500"><div className="h-2.5 w-2.5 rounded bg-accent-400" /> Commission</div>
-                </div>
+
+                {revView === "chart" ? (
+                  <>
+                    <div className="flex items-end gap-4 h-52">
+                      {revData.map((r) => {
+                        const isSelected = selectedRevMonth === r.month;
+                        return (
+                          <div
+                            key={r.month}
+                            onClick={() => setSelectedRevMonth(isSelected ? null : r.month)}
+                            className="flex-1 flex flex-col items-center gap-1 cursor-pointer group"
+                          >
+                            <span className={`text-[10px] font-semibold transition ${isSelected ? "text-brand-600 dark:text-brand-400" : "text-gray-500"}`}>{(r.revenue / 1000).toFixed(0)}k</span>
+                            <div className="w-full flex gap-1">
+                              <div className={`flex-1 rounded-t transition-all ${isSelected ? "bg-brand-600 shadow-lg scale-x-110" : "bg-brand-500 group-hover:bg-brand-400"}`} style={{ height: `${(r.revenue / maxRev) * 200}px` }} />
+                              <div className={`flex-1 rounded-t transition-all ${isSelected ? "bg-amber-500 shadow-lg scale-x-110" : "bg-accent-400 group-hover:bg-accent-300"}`} style={{ height: `${(r.commission / maxRev) * 200}px` }} />
+                            </div>
+                            <span className={`text-[10px] transition ${isSelected ? "text-brand-600 dark:text-brand-400 font-bold" : "text-gray-400"}`}>{r.month}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Month detail panel */}
+                    {selectedRevMonth && (() => {
+                      const m = REVENUE_MONTHLY.find((r) => r.month === selectedRevMonth);
+                      if (!m) return null;
+                      const net = m.revenue - m.commission;
+                      const rate = ((m.commission / m.revenue) * 100).toFixed(1);
+                      const revShare = ((m.revenue / totalRevenue) * 100).toFixed(1);
+                      return (
+                        <div className="mt-4 rounded-xl bg-brand-50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900 p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-bold text-brand-700 dark:text-brand-400">{m.month} 2026 Breakdown</p>
+                            <button onClick={() => setSelectedRevMonth(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium">Revenue</p>
+                              <p className="text-lg font-black text-gray-900 dark:text-white">GHS {m.revenue.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium">Commission</p>
+                              <p className="text-lg font-black text-amber-600 dark:text-amber-400">GHS {m.commission.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium">Net Revenue</p>
+                              <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">GHS {net.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium">Rate</p>
+                              <p className="text-lg font-black text-violet-600 dark:text-violet-400">{rate}%</p>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="flex justify-between text-[10px] mb-1">
+                              <span className="text-gray-500">Share of total revenue</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">{revShare}%</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                              <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${revShare}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><div className="h-2.5 w-2.5 rounded bg-brand-500" /> Revenue</div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500"><div className="h-2.5 w-2.5 rounded bg-accent-400" /> Commission</div>
+                      <p className="text-[10px] text-gray-400 ml-auto">Click a month bar for details</p>
+                    </div>
+                  </>
+                ) : (
+                  /* Table View */
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 dark:border-gray-800">
+                          <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Month</th>
+                          <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                          <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Commission</th>
+                          <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Net Revenue</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Rate</th>
+                          <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Share</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {revData.map((r) => {
+                          const net = r.revenue - r.commission;
+                          const rate = ((r.commission / r.revenue) * 100).toFixed(1);
+                          const share = ((r.revenue / totalRevenue) * 100).toFixed(1);
+                          return (
+                            <tr key={r.month} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition">
+                              <td className="py-2.5 px-3 font-medium text-gray-900 dark:text-white">{r.month} 2026</td>
+                              <td className="py-2.5 px-3 text-right font-semibold text-brand-700 dark:text-brand-400">GHS {r.revenue.toLocaleString()}</td>
+                              <td className="py-2.5 px-3 text-right text-amber-600 dark:text-amber-400">GHS {r.commission.toLocaleString()}</td>
+                              <td className="py-2.5 px-3 text-right font-semibold text-emerald-600">GHS {net.toLocaleString()}</td>
+                              <td className="py-2.5 px-3 text-center text-gray-500">{rate}%</td>
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                                    <div className="h-full rounded-full bg-brand-500" style={{ width: `${share}%` }} />
+                                  </div>
+                                  <span className="text-xs text-gray-500 w-10 text-right">{share}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                          <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">Total</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-brand-700 dark:text-brand-400">GHS {totalRevenue.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-amber-600 dark:text-amber-400">GHS {totalCommission.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-right font-bold text-emerald-600">GHS {(totalRevenue - totalCommission).toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-center font-bold text-gray-700 dark:text-gray-300">{commissionRate}%</td>
+                          <td className="py-2.5 px-3 text-center font-bold text-gray-500">100%</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
