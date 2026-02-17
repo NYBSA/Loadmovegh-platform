@@ -149,15 +149,6 @@ export default function HomePage() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <a
-                href="https://admin.loadmovegh.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-gray-500 hover:text-gray-700 transition hidden sm:block"
-              >
-                Admin
-              </a>
-
               {isAuthenticated && user ? (
                 <>
                   {/* User info + Dashboard link */}

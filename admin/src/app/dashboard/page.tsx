@@ -192,6 +192,37 @@ export default function AdminDashboard() {
   /* ── Region state ───────────────────────────────────────── */
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
+  /* ── Commission state ───────────────────────────────────── */
+  const [commissions, setCommissions] = useState(COMMISSION_DATA.map((c) => ({ ...c })));
+  const [commFilter, setCommFilter] = useState("all");
+  const [commDetail, setCommDetail] = useState<string | null>(null);
+
+  const filteredComm = commissions.filter((c) => commFilter === "all" || c.status === commFilter);
+
+  function handleCollectCommission(id: string) {
+    setCommissions((prev) => prev.map((c) => c.id === id ? { ...c, status: "collected" } : c));
+    showToast("Commission marked as collected.", "success");
+  }
+
+  function handleReleaseEscrow(id: string) {
+    setCommissions((prev) => prev.map((c) => c.id === id ? { ...c, status: "collected" } : c));
+    showToast("Escrow released — commission collected.", "success");
+  }
+
+  function handleExportCSV() {
+    const header = "ID,Trip,Shipper,Courier,Amount,Commission,Rate,Status,Date";
+    const rows = commissions.map((c) => `${c.id},${c.trip},${c.shipper},${c.courier},${c.amount},${c.commission},${c.rate}%,${c.status},${c.date}`);
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "loadmovegh-commissions.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("CSV exported successfully.", "success");
+  }
+
   /* ── Compliance state ──────────────────────────────────── */
   const [complianceItems, setComplianceItems] = useState(COMPLIANCE_ITEMS.map((c) => ({ ...c })));
   const [reviewItem, setReviewItem] = useState<string | null>(null);
@@ -876,24 +907,39 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Collected (Feb)", value: "GHS 14,200", color: "text-emerald-600" },
-                  { label: "Pending", value: "GHS 82.50", color: "text-amber-600" },
-                  { label: "In Escrow", value: "GHS 420", color: "text-blue-600" },
-                  { label: "Disputed", value: "GHS 95", color: "text-red-600" },
+                  { label: "Collected", value: `GHS ${commissions.filter((c) => c.status === "collected").reduce((a, c) => a + c.commission, 0).toLocaleString()}`, color: "text-emerald-600", key: "collected" },
+                  { label: "Pending", value: `GHS ${commissions.filter((c) => c.status === "pending").reduce((a, c) => a + c.commission, 0).toLocaleString()}`, color: "text-amber-600", key: "pending" },
+                  { label: "In Escrow", value: `GHS ${commissions.filter((c) => c.status === "in_escrow").reduce((a, c) => a + c.commission, 0).toLocaleString()}`, color: "text-blue-600", key: "in_escrow" },
+                  { label: "Disputed", value: `GHS ${commissions.filter((c) => c.status === "disputed").reduce((a, c) => a + c.commission, 0).toLocaleString()}`, color: "text-red-600", key: "disputed" },
                 ].map((s) => (
-                  <div key={s.label} className="card">
+                  <div
+                    key={s.label}
+                    onClick={() => setCommFilter(commFilter === s.key ? "all" : s.key)}
+                    className={`card cursor-pointer transition-all hover:shadow-md ${commFilter === s.key ? "ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-gray-950" : ""}`}
+                  >
                     <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{s.label}</p>
                     <p className={`mt-1 text-xl font-bold ${s.color}`}>{s.value}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{commissions.filter((c) => c.status === s.key).length} transactions</p>
                   </div>
                 ))}
               </div>
 
               <div className="card overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4">Commission Ledger</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Commission Ledger
+                    {commFilter !== "all" && <span className="ml-2 badge-blue text-[10px]">{commFilter.replace("_", " ")}</span>}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {commFilter !== "all" && (
+                      <button onClick={() => setCommFilter("all")} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">Show all</button>
+                    )}
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-gray-100 dark:border-gray-800">
                         <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">ID</th>
                         <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Trip</th>
                         <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Shipper</th>
@@ -902,32 +948,93 @@ export default function AdminDashboard() {
                         <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Commission</th>
                         <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Rate</th>
                         <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {COMMISSION_DATA.map((c) => (
-                        <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                      {filteredComm.map((c) => (
+                        <tr key={c.id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition">
                           <td className="py-2.5 px-3 text-gray-500 font-mono text-xs">{c.id}</td>
-                          <td className="py-2.5 px-3 text-gray-700">{c.trip}</td>
-                          <td className="py-2.5 px-3 text-gray-700">{c.shipper}</td>
-                          <td className="py-2.5 px-3 text-gray-700">{c.courier}</td>
-                          <td className="py-2.5 px-3 text-right font-medium text-gray-900">GHS {c.amount.toLocaleString()}</td>
-                          <td className="py-2.5 px-3 text-right font-semibold text-brand-700">GHS {c.commission.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-gray-700 dark:text-gray-300">{c.trip}</td>
+                          <td className="py-2.5 px-3 text-gray-700 dark:text-gray-300">{c.shipper}</td>
+                          <td className="py-2.5 px-3 text-gray-700 dark:text-gray-300">{c.courier}</td>
+                          <td className="py-2.5 px-3 text-right font-medium text-gray-900 dark:text-white">GHS {c.amount.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-right font-semibold text-brand-700 dark:text-brand-400">GHS {c.commission.toLocaleString()}</td>
                           <td className="py-2.5 px-3 text-center text-gray-500">{c.rate}%</td>
                           <td className="py-2.5 px-3 text-center">
                             <span className={c.status === "collected" ? "badge-green" : c.status === "pending" ? "badge-yellow" : c.status === "in_escrow" ? "badge-blue" : "badge-red"}>{c.status.replace("_", " ")}</span>
                           </td>
-                          <td className="py-2.5 px-3 text-gray-500">{c.date}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            {c.status === "pending" && (
+                              <button onClick={() => handleCollectCommission(c.id)} className="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline">Collect</button>
+                            )}
+                            {c.status === "in_escrow" && (
+                              <button onClick={() => handleReleaseEscrow(c.id)} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Release</button>
+                            )}
+                            {c.status === "disputed" && (
+                              <button onClick={() => { setCommDetail(c.id); }} className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline">Resolve</button>
+                            )}
+                            {c.status === "collected" && (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-xs text-gray-500">Total commission: <span className="font-semibold text-gray-700">GHS {COMMISSION_DATA.reduce((a, c) => a + c.commission, 0).toLocaleString()}</span></p>
-                  <button className="btn-secondary text-xs py-1.5 px-3">Export CSV</button>
+                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <p className="text-xs text-gray-500">
+                    {filteredComm.length} transaction{filteredComm.length !== 1 ? "s" : ""} &middot; Total: <span className="font-semibold text-gray-700 dark:text-gray-300">GHS {filteredComm.reduce((a, c) => a + c.commission, 0).toLocaleString()}</span>
+                  </p>
+                  <button onClick={handleExportCSV} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    Export CSV
+                  </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Dispute Resolution Modal ────────────────── */}
+          {commDetail && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setCommDetail(null)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                {(() => {
+                  const c = commissions.find((x) => x.id === commDetail);
+                  if (!c) return null;
+                  return (
+                    <div>
+                      <div className="px-6 py-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Resolve Dispute</h3>
+                            <p className="text-xs text-gray-500">Trip {c.trip} &middot; {c.shipper} → {c.courier}</p>
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-gray-50 dark:bg-gray-800 p-3 mb-4 grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase">Trip Value</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white">GHS {c.amount.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase">Commission</p>
+                            <p className="text-sm font-bold text-brand-600 dark:text-brand-400">GHS {c.commission.toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mb-3">Choose how to resolve this disputed commission:</p>
+                      </div>
+                      <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2">
+                        <button onClick={() => setCommDetail(null)} className="btn-secondary text-sm">Cancel</button>
+                        <button onClick={() => { handleCollectCommission(c.id); setCommDetail(null); }} className="btn-primary text-sm">Collect Commission</button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
