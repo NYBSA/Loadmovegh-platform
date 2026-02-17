@@ -128,10 +128,88 @@ function MiniBar({ data, color, height = 28 }: { data: number[]; color: string; 
    ADMIN DASHBOARD COMPONENT
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── Mock document data per user ────────────────────────────── */
+const USER_DOCS: Record<string, { name: string; type: string; size: string; uploaded: string }[]> = {
+  "U-401": [
+    { name: "Business Registration Certificate", type: "PDF", size: "1.2 MB", uploaded: "2h ago" },
+    { name: "Vehicle Insurance - Truck #1", type: "PDF", size: "890 KB", uploaded: "2h ago" },
+    { name: "Driver License - Kofi Mensah", type: "Image", size: "2.1 MB", uploaded: "2h ago" },
+  ],
+  "U-402": [
+    { name: "Company Registration (GRA)", type: "PDF", size: "1.8 MB", uploaded: "5h ago" },
+    { name: "Tax Clearance Certificate", type: "PDF", size: "540 KB", uploaded: "5h ago" },
+    { name: "Warehouse Lease Agreement", type: "PDF", size: "3.2 MB", uploaded: "5h ago" },
+    { name: "ID Card - Ama Osei", type: "Image", size: "1.4 MB", uploaded: "5h ago" },
+  ],
+  "U-403": [
+    { name: "Ghana Card - Nana Kweku", type: "Image", size: "1.1 MB", uploaded: "8h ago" },
+  ],
+  "U-404": [
+    { name: "Certificate of Incorporation", type: "PDF", size: "2.0 MB", uploaded: "1d ago" },
+    { name: "Directors Resolution", type: "PDF", size: "780 KB", uploaded: "1d ago" },
+    { name: "Fleet Registration (DVLA)", type: "PDF", size: "1.5 MB", uploaded: "1d ago" },
+    { name: "Insurance Bundle - 3 Vehicles", type: "PDF", size: "4.1 MB", uploaded: "1d ago" },
+    { name: "Tax Identification Number", type: "PDF", size: "320 KB", uploaded: "1d ago" },
+  ],
+  "U-405": [],
+  "U-406": [
+    { name: "Business Registration", type: "PDF", size: "1.3 MB", uploaded: "3h ago" },
+    { name: "Vehicle Registration - Truck A", type: "PDF", size: "920 KB", uploaded: "3h ago" },
+    { name: "Vehicle Registration - Truck B", type: "PDF", size: "910 KB", uploaded: "3h ago" },
+    { name: "Driver Licenses (2 drivers)", type: "PDF", size: "2.8 MB", uploaded: "3h ago" },
+  ],
+};
+
 export default function AdminDashboard() {
   const { activeSection: section, setActiveSection: setSection } = useAdmin();
   const maxRev = Math.max(...REVENUE_MONTHLY.map((r) => r.revenue));
   const maxLoad = Math.max(...LOAD_VOLUME.map((l) => l.count));
+
+  /* ── User management state ─────────────────────────────── */
+  const [users, setUsers] = useState(PENDING_USERS.map((u) => ({ ...u })));
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [viewDocsUser, setViewDocsUser] = useState<string | null>(null);
+  const [rejectConfirm, setRejectConfirm] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  /* ── Fraud management state ────────────────────────────── */
+  const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
+
+  function showToast(message: string, type: "success" | "error" | "info" = "success") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  function handleApprove(id: string) {
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, kyc: "approved" } : u));
+    const user = users.find((u) => u.id === id);
+    showToast(`${user?.name} has been approved successfully.`, "success");
+  }
+
+  function handleReject(id: string) {
+    setRejectConfirm(id);
+    setRejectReason("");
+  }
+
+  function confirmReject() {
+    if (!rejectConfirm) return;
+    setUsers((prev) => prev.map((u) => u.id === rejectConfirm ? { ...u, kyc: "rejected" } : u));
+    const user = users.find((u) => u.id === rejectConfirm);
+    showToast(`${user?.name} has been rejected.`, "error");
+    setRejectConfirm(null);
+    setRejectReason("");
+  }
+
+  function handleInvestigate(id: string) {
+    setFraudAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: "investigating" } : a));
+    const alert = fraudAlerts.find((a) => a.id === id);
+    showToast(`Investigating: ${alert?.user}`, "info");
+  }
+
+  function handleDismiss(id: string) {
+    setFraudAlerts((prev) => prev.filter((a) => a.id !== id));
+    showToast("Alert dismissed.", "info");
+  }
 
   const severityBadge = (s: string) => {
     if (s === "critical") return "badge-red";
@@ -145,6 +223,12 @@ export default function AdminDashboard() {
     if (s === "investigating") return "badge-yellow";
     if (s === "escalated") return "bg-purple-50 text-purple-700 ring-1 ring-purple-600/20 badge";
     return "badge-green";
+  };
+
+  const kycBadge = (s: string) => {
+    if (s === "approved") return "badge-green";
+    if (s === "rejected") return "badge-red";
+    return "badge-yellow";
   };
 
   return (
@@ -251,22 +335,30 @@ export default function AdminDashboard() {
           {section === "users" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{PENDING_USERS.length} users pending review</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{users.filter((u) => u.kyc === "pending").length} users pending review &middot; {users.length} total</p>
                 <div className="flex gap-2">
                   <select className="input py-1.5 text-xs w-32"><option>All Types</option><option>Shipper</option><option>Courier</option></select>
-                  <select className="input py-1.5 text-xs w-32"><option>All Status</option><option>Pending</option><option>Rejected</option></select>
+                  <select className="input py-1.5 text-xs w-32"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
                 </div>
               </div>
-              {PENDING_USERS.map((u) => (
-                <div key={u.id} className="card-hover">
+              {users.map((u) => (
+                <div key={u.id} className={`card-hover transition-all ${u.kyc === "approved" ? "border-l-4 border-l-emerald-500" : u.kyc === "rejected" ? "border-l-4 border-l-red-400 opacity-75" : ""}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="h-11 w-11 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0">{u.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
+                      <div className={`h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${u.kyc === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : u.kyc === "rejected" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"}`}>
+                        {u.kyc === "approved" ? (
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        ) : u.kyc === "rejected" ? (
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                        ) : (
+                          u.name.split(" ").map((w) => w[0]).join("").slice(0, 2)
+                        )}
+                      </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-gray-900">{u.name}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{u.name}</p>
                           <span className={u.type === "courier" ? "badge-blue" : "badge-green"}>{u.type}</span>
-                          <span className={u.kyc === "rejected" ? "badge-red" : "badge-yellow"}>KYC: {u.kyc}</span>
+                          <span className={kycBadge(u.kyc)}>KYC: {u.kyc}</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{u.email} &middot; {u.phone}</p>
                         <p className="text-xs text-gray-400 mt-0.5">
@@ -275,13 +367,113 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <button className="btn-primary text-xs px-3 py-2">Approve</button>
-                      <button className="btn-secondary text-xs px-3 py-2">Reject</button>
-                      <button className="btn-secondary text-xs px-3 py-2">View Docs</button>
+                      {u.kyc === "pending" ? (
+                        <>
+                          <button onClick={() => handleApprove(u.id)} className="btn-primary text-xs px-3 py-2">Approve</button>
+                          <button onClick={() => handleReject(u.id)} className="btn-secondary text-xs px-3 py-2 hover:!bg-red-50 hover:!text-red-600 hover:!ring-red-200 dark:hover:!bg-red-900/20 dark:hover:!text-red-400">Reject</button>
+                        </>
+                      ) : u.kyc === "approved" ? (
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                          Approved
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold text-red-500 dark:text-red-400 flex items-center gap-1">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                          Rejected
+                        </span>
+                      )}
+                      <button onClick={() => setViewDocsUser(u.id)} className="btn-secondary text-xs px-3 py-2">View Docs</button>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ── View Docs Modal ─────────────────────────── */}
+          {viewDocsUser && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setViewDocsUser(null)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-lg max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                      {users.find((u) => u.id === viewDocsUser)?.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Submitted Documents</p>
+                  </div>
+                  <button onClick={() => setViewDocsUser(null)} className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+                <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
+                  {(USER_DOCS[viewDocsUser] || []).length === 0 ? (
+                    <div className="text-center py-8">
+                      <svg className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No documents submitted</p>
+                      <p className="text-xs text-gray-400 mt-1">This user has not uploaded any KYC documents yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(USER_DOCS[viewDocsUser] || []).map((doc, i) => (
+                        <div key={i} className="flex items-center gap-3 rounded-lg border border-gray-100 dark:border-gray-800 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${doc.type === "PDF" ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"}`}>
+                            {doc.type === "PDF" ? (
+                              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                            ) : (
+                              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{doc.name}</p>
+                            <p className="text-[11px] text-gray-400">{doc.type} &middot; {doc.size} &middot; Uploaded {doc.uploaded}</p>
+                          </div>
+                          <button className="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline flex-shrink-0">Download</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                  <button onClick={() => setViewDocsUser(null)} className="btn-secondary text-sm">Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Reject Confirmation Modal ───────────────── */}
+          {rejectConfirm && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setRejectConfirm(null)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="px-6 py-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Reject User</h3>
+                      <p className="text-xs text-gray-500">
+                        Reject <span className="font-semibold text-gray-700 dark:text-gray-300">{users.find((u) => u.id === rejectConfirm)?.name}</span>?
+                      </p>
+                    </div>
+                  </div>
+                  <label className="label">Reason for rejection</label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="input h-24 resize-none"
+                    placeholder="e.g. Missing vehicle registration documents..."
+                  />
+                </div>
+                <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2">
+                  <button onClick={() => setRejectConfirm(null)} className="btn-secondary text-sm">Cancel</button>
+                  <button onClick={confirmReject} className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700">
+                    Confirm Reject
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -306,26 +498,41 @@ export default function AdminDashboard() {
               </div>
 
               {/* Alerts list */}
-              {FRAUD_ALERTS.map((a) => (
-                <div key={a.id} className={`card-hover border-l-4 ${a.severity === "critical" ? "border-l-red-500" : a.severity === "high" ? "border-l-orange-400" : "border-l-amber-300"}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-gray-900">{a.title}</h3>
-                        <span className={severityBadge(a.severity)}>{a.severity}</span>
-                        <span className={alertStatusBadge(a.status)}>{a.status}</span>
+              {fraudAlerts.length === 0 ? (
+                <div className="card text-center py-10">
+                  <svg className="h-12 w-12 text-emerald-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">All clear!</p>
+                  <p className="text-xs text-gray-400 mt-1">No active fraud alerts.</p>
+                </div>
+              ) : (
+                fraudAlerts.map((a) => (
+                  <div key={a.id} className={`card-hover border-l-4 ${a.severity === "critical" ? "border-l-red-500" : a.severity === "high" ? "border-l-orange-400" : "border-l-amber-300"}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{a.title}</h3>
+                          <span className={severityBadge(a.severity)}>{a.severity}</span>
+                          <span className={alertStatusBadge(a.status)}>{a.status}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{a.user}</span> &middot; {a.category.replace("_", " ")} &middot; Risk score: <span className="font-semibold">{a.score}/100</span> &middot; {a.time}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-medium text-gray-700">{a.user}</span> &middot; {a.category.replace("_", " ")} &middot; Risk score: <span className="font-semibold">{a.score}/100</span> &middot; {a.time}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <button className="btn-primary text-xs px-3 py-2">Investigate</button>
-                      <button className="btn-secondary text-xs px-3 py-2">Dismiss</button>
+                      <div className="flex gap-2 shrink-0">
+                        {a.status !== "investigating" ? (
+                          <button onClick={() => handleInvestigate(a.id)} className="btn-primary text-xs px-3 py-2">Investigate</button>
+                        ) : (
+                          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <svg className="h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                            Investigating
+                          </span>
+                        )}
+                        <button onClick={() => handleDismiss(a.id)} className="btn-secondary text-xs px-3 py-2 hover:!bg-red-50 hover:!text-red-600 dark:hover:!bg-red-900/20 dark:hover:!text-red-400">Dismiss</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
 
@@ -633,6 +840,31 @@ export default function AdminDashboard() {
           )}
 
       </div>
+
+      {/* ── Toast Notification ─────────────────────── */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[70] animate-slide-up">
+          <div className={`flex items-center gap-3 rounded-xl px-5 py-3.5 shadow-2xl border ${
+            toast.type === "success" ? "bg-emerald-600 border-emerald-500 text-white" :
+            toast.type === "error" ? "bg-red-600 border-red-500 text-white" :
+            "bg-gray-800 border-gray-700 text-white"
+          }`}>
+            {toast.type === "success" && (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            )}
+            {toast.type === "error" && (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            )}
+            {toast.type === "info" && (
+              <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+            <button onClick={() => setToast(null)} className="ml-2 text-white/70 hover:text-white transition">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
