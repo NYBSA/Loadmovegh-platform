@@ -189,6 +189,10 @@ export default function AdminDashboard() {
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
+  /* ── Overview state ──────────────────────────────────── */
+  const [selectedOverviewRevMonth, setSelectedOverviewRevMonth] = useState<string | null>(null);
+  const [selectedOverviewLoadMonth, setSelectedOverviewLoadMonth] = useState<string | null>(null);
+
   /* ── Revenue state ────────────────────────────────────── */
   const [revTimePeriod, setRevTimePeriod] = useState("6m");
   const [selectedRevMonth, setSelectedRevMonth] = useState<string | null>(null);
@@ -395,89 +399,231 @@ export default function AdminDashboard() {
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           {section === "overview" && (
             <div className="space-y-6">
-              {/* KPI Cards */}
+              {/* KPI Cards — clickable, navigate to respective sections */}
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                {KPI.map((k) => (
-                  <div key={k.label} className="card">
-                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{k.label}</p>
+                {[
+                  { ...KPI[0], icon: "💰", goto: "revenue", color: "border-emerald-500" },
+                  { ...KPI[1], icon: "👥", goto: "users", color: "border-blue-500" },
+                  { ...KPI[2], icon: "📦", goto: "loads", color: "border-brand-500" },
+                  { ...KPI[3], icon: "📊", goto: "commission", color: "border-violet-500" },
+                  { ...KPI[4], icon: "⚠️", goto: "compliance", color: "border-amber-500" },
+                  { ...KPI[5], icon: "🛡️", goto: "fraud", color: "border-red-500" },
+                ].map((k) => (
+                  <div
+                    key={k.label}
+                    onClick={() => setSection(k.goto)}
+                    className={`card cursor-pointer hover:shadow-lg transition-all border-b-2 ${k.color} group`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{k.label}</p>
+                      <span className="text-base group-hover:scale-125 transition-transform">{k.icon}</span>
+                    </div>
                     <p className="mt-1.5 text-xl font-bold text-gray-900 dark:text-white">{k.value}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <span className={`text-xs font-medium ${k.up && k.label !== "Fraud Alerts" ? "text-emerald-600" : "text-red-600"}`}>{k.delta}</span>
                       <span className="text-[10px] text-gray-400">{k.sub}</span>
                     </div>
+                    <p className="text-[9px] text-brand-500 dark:text-brand-400 mt-2 opacity-0 group-hover:opacity-100 transition font-medium">Click to view →</p>
                   </div>
                 ))}
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6">
-                {/* Revenue chart */}
+                {/* Revenue chart — interactive */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Monthly Revenue</h3>
-                  <div className="flex items-end gap-3 h-40">
-                    {REVENUE_MONTHLY.map((r) => (
-                      <div key={r.month} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-gray-500">{(r.revenue / 1000).toFixed(0)}k</span>
-                        <div className="w-full rounded-t bg-brand-500" style={{ height: `${(r.revenue / maxRev) * 100}%` }} />
-                        <span className="text-[10px] text-gray-400">{r.month}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Monthly Revenue</h3>
+                    <button onClick={() => setSection("revenue")} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">Full report →</button>
                   </div>
+                  <div className="flex items-end gap-3 h-40">
+                    {REVENUE_MONTHLY.map((r) => {
+                      const isHovered = selectedOverviewRevMonth === r.month;
+                      return (
+                        <div
+                          key={r.month}
+                          onClick={() => setSelectedOverviewRevMonth(isHovered ? null : r.month)}
+                          className="flex-1 flex flex-col items-center gap-1 cursor-pointer group"
+                        >
+                          <span className={`text-[10px] font-semibold transition ${isHovered ? "text-brand-600 dark:text-brand-400" : "text-gray-500"}`}>{(r.revenue / 1000).toFixed(0)}k</span>
+                          <div className={`w-full rounded-t transition-all ${isHovered ? "bg-brand-600 shadow-lg scale-x-110" : "bg-brand-500 group-hover:bg-brand-400"}`} style={{ height: `${(r.revenue / maxRev) * 100}%` }} />
+                          <span className={`text-[10px] transition ${isHovered ? "text-brand-600 dark:text-brand-400 font-bold" : "text-gray-400"}`}>{r.month}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {selectedOverviewRevMonth && (() => {
+                    const m = REVENUE_MONTHLY.find((r) => r.month === selectedOverviewRevMonth);
+                    if (!m) return null;
+                    return (
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-[10px] text-gray-500">Revenue</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">GHS {m.revenue.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500">Commission</p>
+                          <p className="text-sm font-bold text-amber-600">GHS {m.commission.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500">Net</p>
+                          <p className="text-sm font-bold text-emerald-600">GHS {(m.revenue - m.commission).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* Load volume chart */}
+                {/* Load volume chart — interactive */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Load Volume</h3>
-                  <div className="flex items-end gap-3 h-40">
-                    {LOAD_VOLUME.map((l) => (
-                      <div key={l.month} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-gray-500">{l.count}</span>
-                        <div className="w-full rounded-t bg-blue-500" style={{ height: `${(l.count / maxLoad) * 100}%` }} />
-                        <span className="text-[10px] text-gray-400">{l.month}</span>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Load Volume</h3>
+                    <button onClick={() => setSection("loads")} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">Full report →</button>
                   </div>
+                  <div className="flex items-end gap-3 h-40">
+                    {LOAD_VOLUME.map((l) => {
+                      const isHovered = selectedOverviewLoadMonth === l.month;
+                      return (
+                        <div
+                          key={l.month}
+                          onClick={() => setSelectedOverviewLoadMonth(isHovered ? null : l.month)}
+                          className="flex-1 flex flex-col items-center gap-1 cursor-pointer group"
+                        >
+                          <span className={`text-[10px] font-semibold transition ${isHovered ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}`}>{l.count}</span>
+                          <div className={`w-full rounded-t transition-all ${isHovered ? "bg-blue-600 shadow-lg scale-x-110" : "bg-blue-500 group-hover:bg-blue-400"}`} style={{ height: `${(l.count / maxLoad) * 100}%` }} />
+                          <span className={`text-[10px] transition ${isHovered ? "text-blue-600 dark:text-blue-400 font-bold" : "text-gray-400"}`}>{l.month}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {selectedOverviewLoadMonth && (() => {
+                    const m = LOAD_VOLUME.find((l) => l.month === selectedOverviewLoadMonth);
+                    if (!m) return null;
+                    const total = LOAD_VOLUME.reduce((a, l) => a + l.count, 0);
+                    return (
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-[10px] text-gray-500">Loads</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">{m.count.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500">Share</p>
+                          <p className="text-sm font-bold text-blue-600">{ ((m.count / total) * 100).toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-gray-500">Est. Revenue</p>
+                          <p className="text-sm font-bold text-emerald-600">GHS {(m.count * 2150).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
-              {/* Quick Lists */}
+              {/* Quick Lists — actionable */}
               <div className="grid lg:grid-cols-2 gap-6">
-                {/* Recent fraud alerts */}
+                {/* Recent fraud alerts — with Investigate button */}
                 <div className="card">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-700">Recent Fraud Alerts</h3>
-                    <button onClick={() => setSection("fraud")} className="text-xs text-brand-600 hover:underline">View all</button>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Recent Fraud Alerts</h3>
+                    <button onClick={() => setSection("fraud")} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">View all →</button>
                   </div>
-                  <div className="space-y-2.5">
-                    {FRAUD_ALERTS.slice(0, 4).map((a) => (
-                      <div key={a.id} className="flex items-start gap-3">
-                        <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${a.severity === "critical" ? "bg-red-500" : a.severity === "high" ? "bg-orange-500" : "bg-amber-400"}`} />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-gray-900 truncate">{a.title}</p>
-                          <p className="text-[10px] text-gray-500">{a.user} &middot; {a.time}</p>
+                  {fraudAlerts.length === 0 ? (
+                    <div className="text-center py-6">
+                      <svg className="h-8 w-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">No active fraud alerts</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {fraudAlerts.slice(0, 4).map((a) => (
+                        <div key={a.id} className="flex items-start gap-3 group">
+                          <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${a.severity === "critical" ? "bg-red-500" : a.severity === "high" ? "bg-orange-500" : "bg-amber-400"}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{a.title}</p>
+                            <p className="text-[10px] text-gray-500">{a.user} &middot; {a.time}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={severityBadge(a.severity)}>{a.severity}</span>
+                            {a.status === "investigating" ? (
+                              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Investigating…</span>
+                            ) : (
+                              <button onClick={(e) => { e.stopPropagation(); handleInvestigate(a.id); }} className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline font-medium opacity-0 group-hover:opacity-100 transition">Investigate</button>
+                            )}
+                          </div>
                         </div>
-                        <span className={severityBadge(a.severity)}>{a.severity}</span>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Pending approvals */}
+                {/* Pending approvals — with Quick Approve button */}
                 <div className="card">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-700">Pending User Approvals</h3>
-                    <button onClick={() => setSection("users")} className="text-xs text-brand-600 hover:underline">View all</button>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Pending User Approvals</h3>
+                    <button onClick={() => setSection("users")} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">View all →</button>
                   </div>
-                  <div className="space-y-2.5">
-                    {PENDING_USERS.slice(0, 4).map((u) => (
-                      <div key={u.id} className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">{u.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-gray-900 truncate">{u.name}</p>
-                          <p className="text-[10px] text-gray-500">{u.type} &middot; {u.submitted}</p>
+                  {users.filter((u) => u.kyc === "pending").length === 0 ? (
+                    <div className="text-center py-6">
+                      <svg className="h-8 w-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">All users have been reviewed</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {users.filter((u) => u.kyc === "pending").slice(0, 4).map((u) => (
+                        <div key={u.id} className="flex items-center gap-3 group">
+                          <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300">{u.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2)}</div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{u.name}</p>
+                            <p className="text-[10px] text-gray-500">{u.type} &middot; {u.submitted}</p>
+                          </div>
+                          <span className={u.docs >= 3 ? "badge-green" : "badge-yellow"}>{u.docs} docs</span>
+                          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                            <button onClick={(e) => { e.stopPropagation(); handleApprove(u.id); }} className="text-[10px] bg-emerald-500 text-white rounded px-2 py-0.5 hover:bg-emerald-600 transition font-medium">Approve</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleReject(u.id); }} className="text-[10px] bg-red-500 text-white rounded px-2 py-0.5 hover:bg-red-600 transition font-medium">Reject</button>
+                          </div>
                         </div>
-                        <span className={u.docs >= 3 ? "badge-green" : "badge-yellow"}>{u.docs} docs</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Stats Bar */}
+              <div className="card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Platform Performance</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Revenue (6mo)</p>
+                    <p className="text-lg font-black text-gray-900 dark:text-white">GHS {(REVENUE_MONTHLY.reduce((a, r) => a + r.revenue, 0) / 1000000).toFixed(2)}M</p>
+                    <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mt-2 overflow-hidden">
+                      <div className="h-full rounded-full bg-brand-500" style={{ width: "78%" }} />
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1">78% of target</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Loads (6mo)</p>
+                    <p className="text-lg font-black text-gray-900 dark:text-white">{LOAD_VOLUME.reduce((a, l) => a + l.count, 0).toLocaleString()}</p>
+                    <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mt-2 overflow-hidden">
+                      <div className="h-full rounded-full bg-blue-500" style={{ width: "85%" }} />
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1">85% of target</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Active Regions</p>
+                    <p className="text-lg font-black text-gray-900 dark:text-white">16</p>
+                    <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mt-2 overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500" style={{ width: "100%" }} />
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1">Full coverage</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Compliance Score</p>
+                    <p className="text-lg font-black text-gray-900 dark:text-white">94%</p>
+                    <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mt-2 overflow-hidden">
+                      <div className="h-full rounded-full bg-violet-500" style={{ width: "94%" }} />
+                    </div>
+                    <p className="text-[9px] text-gray-400 mt-1">Above threshold</p>
                   </div>
                 </div>
               </div>
