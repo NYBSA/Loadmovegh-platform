@@ -189,6 +189,11 @@ export default function AdminDashboard() {
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
+  /* ── Compliance state ──────────────────────────────────── */
+  const [complianceItems, setComplianceItems] = useState(COMPLIANCE_ITEMS.map((c) => ({ ...c })));
+  const [reviewItem, setReviewItem] = useState<string | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+
   function showToast(message: string, type: "success" | "error" | "info" = "success") {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -223,6 +228,31 @@ export default function AdminDashboard() {
   function handleDismiss(id: string) {
     setFraudAlerts((prev) => prev.filter((a) => a.id !== id));
     showToast("Alert dismissed.", "info");
+  }
+
+  function handleComplianceReview(id: string) {
+    setReviewItem(id);
+    setReviewNote("");
+  }
+
+  function confirmComplianceReview() {
+    if (!reviewItem) return;
+    setComplianceItems((prev) => prev.map((c) => c.id === reviewItem ? { ...c, status: "in_review" } : c));
+    const item = complianceItems.find((c) => c.id === reviewItem);
+    showToast(`${item?.type} for ${item?.user} is now under review.`, "info");
+    setReviewItem(null);
+    setReviewNote("");
+  }
+
+  function handleComplianceResolve(id: string) {
+    setComplianceItems((prev) => prev.map((c) => c.id === id ? { ...c, status: "resolved" } : c));
+    const item = complianceItems.find((c) => c.id === id);
+    showToast(`${item?.type} for ${item?.user} has been resolved.`, "success");
+  }
+
+  function handleSendReminder(id: string) {
+    const item = complianceItems.find((c) => c.id === id);
+    showToast(`Reminder sent to ${item?.user} for: ${item?.type}`, "success");
   }
 
   const severityBadge = (s: string) => {
@@ -840,10 +870,10 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Open Issues", value: "5", color: "text-red-600" },
-                  { label: "In Review", value: "2", color: "text-amber-600" },
-                  { label: "Scheduled", value: "1", color: "text-blue-600" },
-                  { label: "Overdue (<3 days)", value: "2", color: "text-red-700" },
+                  { label: "Open Issues", value: String(complianceItems.filter((c) => c.status === "open").length), color: "text-red-600" },
+                  { label: "In Review", value: String(complianceItems.filter((c) => c.status === "in_review").length), color: "text-amber-600" },
+                  { label: "Scheduled", value: String(complianceItems.filter((c) => c.status === "scheduled").length), color: "text-blue-600" },
+                  { label: "Resolved", value: String(complianceItems.filter((c) => c.status === "resolved").length), color: "text-emerald-600" },
                 ].map((s) => (
                   <div key={s.label} className="card">
                     <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{s.label}</p>
@@ -852,26 +882,80 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {COMPLIANCE_ITEMS.map((c) => (
-                <div key={c.id} className={`card-hover border-l-4 ${c.severity === "critical" ? "border-l-red-500" : c.severity === "high" ? "border-l-orange-400" : c.severity === "medium" ? "border-l-amber-300" : "border-l-gray-300"}`}>
+              {complianceItems.filter((c) => c.status !== "resolved").length === 0 ? (
+                <div className="card text-center py-10">
+                  <svg className="h-12 w-12 text-emerald-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">All compliance issues resolved!</p>
+                </div>
+              ) : null}
+
+              {complianceItems.map((c) => (
+                <div key={c.id} className={`card-hover border-l-4 transition-all ${c.status === "resolved" ? "border-l-emerald-500 opacity-60" : c.severity === "critical" ? "border-l-red-500" : c.severity === "high" ? "border-l-orange-400" : c.severity === "medium" ? "border-l-amber-300" : "border-l-gray-300"}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-gray-900">{c.type}</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{c.type}</h3>
                         <span className={severityBadge(c.severity)}>{c.severity}</span>
-                        <span className={c.status === "open" ? "badge-red" : c.status === "in_review" ? "badge-yellow" : "badge-blue"}>{c.status.replace("_", " ")}</span>
+                        <span className={c.status === "open" ? "badge-red" : c.status === "in_review" ? "badge-yellow" : c.status === "scheduled" ? "badge-blue" : "badge-green"}>{c.status.replace("_", " ")}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-medium text-gray-700">{c.user}</span> &middot; Category: {c.category} &middot; Due: <span className="font-medium">{c.due}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{c.user}</span> &middot; Category: {c.category} &middot; Due: <span className="font-medium">{c.due}</span>
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <button className="btn-primary text-xs px-3 py-2">Review</button>
-                      <button className="btn-secondary text-xs px-3 py-2">Send Reminder</button>
+                      {c.status === "resolved" ? (
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                          Resolved
+                        </span>
+                      ) : c.status === "in_review" ? (
+                        <button onClick={() => handleComplianceResolve(c.id)} className="btn-primary text-xs px-3 py-2">Mark Resolved</button>
+                      ) : (
+                        <button onClick={() => handleComplianceReview(c.id)} className="btn-primary text-xs px-3 py-2">Review</button>
+                      )}
+                      {c.status !== "resolved" && (
+                        <button onClick={() => handleSendReminder(c.id)} className="btn-secondary text-xs px-3 py-2">Send Reminder</button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ── Compliance Review Modal ─────────────────── */}
+          {reviewItem && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setReviewItem(null)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="px-6 py-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
+                      <svg className="h-5 w-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" /></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Review Compliance Issue</h3>
+                      <p className="text-xs text-gray-500">{complianceItems.find((c) => c.id === reviewItem)?.type}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 dark:bg-gray-800 p-3 mb-4 space-y-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{complianceItems.find((c) => c.id === reviewItem)?.user}</p>
+                    <p className="text-xs text-gray-500">Category: {complianceItems.find((c) => c.id === reviewItem)?.category} &middot; Due: {complianceItems.find((c) => c.id === reviewItem)?.due}</p>
+                    <p className="text-xs text-gray-500">Severity: <span className="font-semibold">{complianceItems.find((c) => c.id === reviewItem)?.severity}</span></p>
+                  </div>
+                  <label className="label">Review notes</label>
+                  <textarea
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    className="input h-24 resize-none"
+                    placeholder="Add notes about this compliance review..."
+                  />
+                </div>
+                <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-2">
+                  <button onClick={() => setReviewItem(null)} className="btn-secondary text-sm">Cancel</button>
+                  <button onClick={confirmComplianceReview} className="btn-primary text-sm">Start Review</button>
+                </div>
+              </div>
             </div>
           )}
 
