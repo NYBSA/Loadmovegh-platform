@@ -189,6 +189,9 @@ export default function AdminDashboard() {
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
+  /* ── Region state ───────────────────────────────────────── */
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+
   /* ── Compliance state ──────────────────────────────────── */
   const [complianceItems, setComplianceItems] = useState(COMPLIANCE_ITEMS.map((c) => ({ ...c })));
   const [reviewItem, setReviewItem] = useState<string | null>(null);
@@ -747,25 +750,22 @@ export default function AdminDashboard() {
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* Heat map visual */}
                 <div className="lg:col-span-2 card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Ghana Regional Load Density</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Ghana Regional Load Density</h3>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                    {REGIONS.map((r) => {
-                      const intensity = Math.round((r.heat / 100) * 255);
-                      const bg = r.heat >= 60 ? `rgb(${255 - intensity / 2}, ${Math.max(40, intensity)}, ${Math.max(40, intensity / 2)})` : r.heat >= 20 ? `rgb(255, ${200 - intensity}, ${80})` : `rgb(${220 + intensity / 8}, ${230 + intensity / 10}, ${220 + intensity / 8})`;
-                      return (
-                        <div
-                          key={r.name}
-                          className="rounded-xl p-4 text-center transition hover:scale-105 cursor-pointer"
-                          style={{ backgroundColor: `rgba(22, 163, 74, ${r.heat / 100 * 0.7 + 0.05})` }}
-                        >
-                          <p className={`text-xs font-bold ${r.heat >= 50 ? "text-white" : "text-gray-700"}`}>{r.name.replace("Greater ", "Gr. ")}</p>
-                          <p className={`text-lg font-black mt-1 ${r.heat >= 50 ? "text-white" : "text-gray-900"}`}>{r.loads}</p>
-                          <p className={`text-[10px] ${r.heat >= 50 ? "text-white/80" : "text-gray-500"}`}>loads</p>
-                        </div>
-                      );
-                    })}
+                    {REGIONS.map((r) => (
+                      <div
+                        key={r.name}
+                        onClick={() => setSelectedRegion(selectedRegion === r.name ? null : r.name)}
+                        className={`rounded-xl p-4 text-center transition-all cursor-pointer hover:scale-105 ${selectedRegion === r.name ? "ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-gray-900 scale-105" : ""}`}
+                        style={{ backgroundColor: `rgba(22, 163, 74, ${r.heat / 100 * 0.7 + 0.05})` }}
+                      >
+                        <p className={`text-xs font-bold ${r.heat >= 50 ? "text-white" : "text-gray-700"}`}>{r.name.replace("Greater ", "Gr. ")}</p>
+                        <p className={`text-lg font-black mt-1 ${r.heat >= 50 ? "text-white" : "text-gray-900"}`}>{r.loads}</p>
+                        <p className={`text-[10px] ${r.heat >= 50 ? "text-white/80" : "text-gray-500"}`}>loads</p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                     <span className="text-[10px] text-gray-400">Low</span>
                     <div className="flex h-2.5 rounded-full overflow-hidden w-40">
                       <div className="flex-1 bg-brand-100" />
@@ -778,23 +778,92 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Region stats table */}
+                {/* Region detail / stats panel */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">By Region</h3>
-                  <div className="space-y-2">
-                    {REGIONS.map((r) => (
-                      <div key={r.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: `rgba(22, 163, 74, ${r.heat / 100 * 0.8 + 0.2})` }} />
-                        <span className="text-xs text-gray-700 flex-1 truncate">{r.name}</span>
-                        <span className="text-xs font-semibold text-gray-900 w-10 text-right">{r.loads}</span>
-                        <span className="text-[10px] text-gray-400 w-16 text-right">GHS {(r.revenue / 1000).toFixed(0)}k</span>
+                  {selectedRegion ? (() => {
+                    const r = REGIONS.find((reg) => reg.name === selectedRegion)!;
+                    const totalLoads = REGIONS.reduce((a, reg) => a + reg.loads, 0);
+                    const totalRev = REGIONS.reduce((a, reg) => a + reg.revenue, 0);
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white">{r.name}</h3>
+                          <button onClick={() => setSelectedRegion(null)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                            Show all
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-5">
+                          <div className="rounded-lg bg-brand-50 dark:bg-brand-900/20 p-3 text-center">
+                            <p className="text-lg font-black text-brand-700 dark:text-brand-400">{r.loads}</p>
+                            <p className="text-[10px] text-brand-600 dark:text-brand-500 font-medium">Active Loads</p>
+                          </div>
+                          <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-3 text-center">
+                            <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">GHS {(r.revenue / 1000).toFixed(0)}k</p>
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-500 font-medium">Revenue</p>
+                          </div>
+                          <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3 text-center">
+                            <p className="text-lg font-black text-blue-700 dark:text-blue-400">{r.couriers}</p>
+                            <p className="text-[10px] text-blue-600 dark:text-blue-500 font-medium">Couriers</p>
+                          </div>
+                          <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3 text-center">
+                            <p className="text-lg font-black text-amber-700 dark:text-amber-400">{r.heat}%</p>
+                            <p className="text-[10px] text-amber-600 dark:text-amber-500 font-medium">Demand Index</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">Share of loads</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">{((r.loads / totalLoads) * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                              <div className="h-full rounded-full bg-brand-500" style={{ width: `${(r.loads / totalLoads) * 100}%` }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">Share of revenue</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">{((r.revenue / totalRev) * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(r.revenue / totalRev) * 100}%` }} />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-500">Avg revenue per load</span>
+                              <span className="font-semibold text-gray-700 dark:text-gray-300">GHS {Math.round(r.revenue / r.loads).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between text-xs">
-                    <span className="text-gray-500">Total</span>
-                    <span className="font-semibold text-gray-700">{REGIONS.reduce((a, r) => a + r.loads, 0).toLocaleString()} loads</span>
-                  </div>
+                    );
+                  })() : (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">By Region</h3>
+                      <p className="text-xs text-gray-400 mb-3">Click a region on the map for details</p>
+                      <div className="space-y-2">
+                        {REGIONS.map((r) => (
+                          <div
+                            key={r.name}
+                            onClick={() => setSelectedRegion(r.name)}
+                            className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                          >
+                            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: `rgba(22, 163, 74, ${r.heat / 100 * 0.8 + 0.2})` }} />
+                            <span className="text-xs text-gray-700 dark:text-gray-300 flex-1 truncate">{r.name}</span>
+                            <span className="text-xs font-semibold text-gray-900 dark:text-white w-10 text-right">{r.loads}</span>
+                            <span className="text-[10px] text-gray-400 w-16 text-right">GHS {(r.revenue / 1000).toFixed(0)}k</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between text-xs">
+                        <span className="text-gray-500">Total</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">{REGIONS.reduce((a, r) => a + r.loads, 0).toLocaleString()} loads</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
