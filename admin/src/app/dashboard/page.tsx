@@ -189,6 +189,57 @@ export default function AdminDashboard() {
   /* ── Fraud management state ────────────────────────────── */
   const [fraudAlerts, setFraudAlerts] = useState(FRAUD_ALERTS.map((a) => ({ ...a })));
 
+  /* ── Load Analytics state ──────────────────────────────── */
+  const [loadTimePeriod, setLoadTimePeriod] = useState("6m");
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedCargo, setSelectedCargo] = useState<string | null>(null);
+  const [expandedRoute, setExpandedRoute] = useState<string | null>(null);
+  const [loadSortCol, setLoadSortCol] = useState<"loads" | "avg" | "rev">("loads");
+  const [loadSortDir, setLoadSortDir] = useState<"asc" | "desc">("desc");
+
+  const CARGO_TYPES = [
+    { type: "General", pct: 32, loads: 1996, avgPrice: 1650, color: "bg-blue-500" },
+    { type: "Electronics", pct: 18, loads: 1123, avgPrice: 2400, color: "bg-violet-500" },
+    { type: "Perishables", pct: 14, loads: 873, avgPrice: 1950, color: "bg-amber-500" },
+    { type: "Construction", pct: 12, loads: 749, avgPrice: 2800, color: "bg-orange-500" },
+    { type: "Textiles", pct: 9, loads: 562, avgPrice: 1200, color: "bg-pink-500" },
+    { type: "Medical", pct: 7, loads: 437, avgPrice: 3200, color: "bg-red-500" },
+    { type: "Furniture", pct: 5, loads: 312, avgPrice: 1800, color: "bg-teal-500" },
+    { type: "Other", pct: 3, loads: 187, avgPrice: 980, color: "bg-gray-400" },
+  ];
+
+  const TOP_ROUTES = [
+    { route: "Accra → Kumasi", loads: 412, avg: 1850, rev: 762200, trend: [3, 5, 4, 7, 6, 8], distance: 252, avgTime: "5h 30m", topCarrier: "Kofi Transport Ltd", completionRate: 94.2 },
+    { route: "Tema → Takoradi", loads: 287, avg: 2100, rev: 602700, trend: [2, 3, 5, 4, 6, 7], distance: 304, avgTime: "6h 15m", topCarrier: "Accra Express Co.", completionRate: 91.8 },
+    { route: "Accra → Tamale", loads: 198, avg: 3400, rev: 673200, trend: [4, 3, 5, 6, 7, 9], distance: 604, avgTime: "10h 45m", topCarrier: "Northern Star Haulage", completionRate: 88.5 },
+    { route: "Kumasi → Tamale", loads: 142, avg: 2800, rev: 397600, trend: [2, 4, 3, 5, 4, 6], distance: 378, avgTime: "7h 20m", topCarrier: "Ashanti Freight", completionRate: 92.1 },
+    { route: "Tema → Kumasi", loads: 134, avg: 2050, rev: 274700, trend: [3, 4, 4, 5, 5, 6], distance: 268, avgTime: "5h 50m", topCarrier: "Gulf Logistics GH", completionRate: 96.0 },
+  ];
+
+  const sortedRoutes = [...TOP_ROUTES].sort((a, b) => {
+    const dir = loadSortDir === "asc" ? 1 : -1;
+    return (a[loadSortCol] - b[loadSortCol]) * dir;
+  });
+
+  function toggleRouteSort(col: "loads" | "avg" | "rev") {
+    if (loadSortCol === col) setLoadSortDir(loadSortDir === "asc" ? "desc" : "asc");
+    else { setLoadSortCol(col); setLoadSortDir("desc"); }
+  }
+
+  function handleExportLoadsCSV() {
+    const header = "Route,Loads,Avg Price (GHS),Revenue (GHS),Distance (km),Avg Time,Top Carrier,Completion Rate";
+    const rows = TOP_ROUTES.map((r) => `${r.route},${r.loads},${r.avg},${r.rev},${r.distance},${r.avgTime},${r.topCarrier},${r.completionRate}%`);
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "loadmovegh-load-analytics.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Load analytics CSV exported.", "success");
+  }
+
   /* ── Region state ───────────────────────────────────────── */
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
@@ -683,91 +734,214 @@ export default function AdminDashboard() {
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
           {section === "loads" && (
             <div className="space-y-6">
+              {/* KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
-                  { label: "Total Loads", value: "6,239" },
-                  { label: "Active Now", value: "134" },
-                  { label: "Avg Bids/Load", value: "4.2" },
-                  { label: "Completion Rate", value: "91.3%" },
-                  { label: "Avg Distance", value: "218 km" },
+                  { label: "Total Loads", value: LOAD_VOLUME.reduce((a, l) => a + l.count, 0).toLocaleString(), icon: "📦", delta: "+12.4%", up: true },
+                  { label: "Active Now", value: "134", icon: "🔄", delta: "+8 today", up: true },
+                  { label: "Avg Bids/Load", value: "4.2", icon: "🏷️", delta: "+0.3", up: true },
+                  { label: "Completion Rate", value: "91.3%", icon: "✅", delta: "+1.2%", up: true },
+                  { label: "Avg Distance", value: "218 km", icon: "📍", delta: "-5 km", up: false },
                 ].map((s) => (
-                  <div key={s.label} className="card">
-                    <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{s.label}</p>
-                    <p className="mt-1 text-xl font-bold text-gray-900">{s.value}</p>
+                  <div key={s.label} className="card hover:shadow-md transition">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{s.label}</p>
+                      <span className="text-lg">{s.icon}</span>
+                    </div>
+                    <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">{s.value}</p>
+                    <p className={`text-[10px] mt-0.5 font-medium ${s.up ? "text-emerald-600" : "text-red-500"}`}>
+                      {s.up ? "↑" : "↓"} {s.delta} <span className="text-gray-400 font-normal">vs last period</span>
+                    </p>
                   </div>
                 ))}
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6">
+                {/* Loads by Month — Interactive Bar Chart */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Loads by Month</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Loads by Month</h3>
+                    <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-[10px]">
+                      {[{ label: "3M", val: "3m" }, { label: "6M", val: "6m" }].map((p) => (
+                        <button key={p.val} onClick={() => { setLoadTimePeriod(p.val); setSelectedMonth(null); }} className={`px-2.5 py-1 transition font-medium ${loadTimePeriod === p.val ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>{p.label}</button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex items-end gap-3 h-44">
-                    {LOAD_VOLUME.map((l) => (
-                      <div key={l.month} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] text-gray-500">{l.count}</span>
-                        <div className="w-full rounded-t bg-blue-500" style={{ height: `${(l.count / maxLoad) * 100}%` }} />
-                        <span className="text-[10px] text-gray-400">{l.month}</span>
+                    {(loadTimePeriod === "3m" ? LOAD_VOLUME.slice(-3) : LOAD_VOLUME).map((l) => (
+                      <div
+                        key={l.month}
+                        onClick={() => setSelectedMonth(selectedMonth === l.month ? null : l.month)}
+                        className="flex-1 flex flex-col items-center gap-1 cursor-pointer group"
+                      >
+                        <span className={`text-[10px] font-semibold transition ${selectedMonth === l.month ? "text-brand-600 dark:text-brand-400" : "text-gray-500"}`}>{l.count}</span>
+                        <div
+                          className={`w-full rounded-t transition-all ${selectedMonth === l.month ? "bg-brand-500 scale-x-110 shadow-lg" : "bg-blue-500 group-hover:bg-blue-400"}`}
+                          style={{ height: `${(l.count / maxLoad) * 100}%` }}
+                        />
+                        <span className={`text-[10px] transition ${selectedMonth === l.month ? "text-brand-600 dark:text-brand-400 font-bold" : "text-gray-400"}`}>{l.month}</span>
                       </div>
                     ))}
                   </div>
+                  {selectedMonth && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 rounded-lg bg-brand-50 dark:bg-brand-950/20 p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-brand-700 dark:text-brand-400">{selectedMonth} 2026</p>
+                        <button onClick={() => setSelectedMonth(null)} className="text-[10px] text-gray-400 hover:text-gray-600">✕</button>
+                      </div>
+                      {(() => {
+                        const m = LOAD_VOLUME.find((l) => l.month === selectedMonth);
+                        if (!m) return null;
+                        const total = LOAD_VOLUME.reduce((a, l) => a + l.count, 0);
+                        return (
+                          <div className="grid grid-cols-3 gap-3 mt-2">
+                            <div>
+                              <p className="text-[10px] text-gray-500">Loads</p>
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">{m.count.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500">Share</p>
+                              <p className="text-sm font-bold text-brand-600 dark:text-brand-400">{((m.count / total) * 100).toFixed(1)}%</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500">Est. Revenue</p>
+                              <p className="text-sm font-bold text-emerald-600">GHS {(m.count * 2150).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
 
+                {/* Loads by Cargo Type — Interactive */}
                 <div className="card">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">Loads by Cargo Type</h3>
-                  <div className="space-y-2.5">
-                    {[
-                      { type: "General", pct: 32 },
-                      { type: "Electronics", pct: 18 },
-                      { type: "Perishables", pct: 14 },
-                      { type: "Construction", pct: 12 },
-                      { type: "Textiles", pct: 9 },
-                      { type: "Medical", pct: 7 },
-                      { type: "Furniture", pct: 5 },
-                      { type: "Other", pct: 3 },
-                    ].map((c) => (
-                      <div key={c.type} className="flex items-center gap-3">
-                        <span className="text-xs text-gray-600 w-24 shrink-0">{c.type}</span>
-                        <div className="flex-1 h-3 rounded-full bg-gray-100 overflow-hidden">
-                          <div className="h-full rounded-full bg-brand-500" style={{ width: `${c.pct}%` }} />
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Loads by Cargo Type</h3>
+                    {selectedCargo && (
+                      <button onClick={() => setSelectedCargo(null)} className="text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Show all</button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {CARGO_TYPES.map((c) => (
+                      <div key={c.type}>
+                        <div
+                          onClick={() => setSelectedCargo(selectedCargo === c.type ? null : c.type)}
+                          className={`flex items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 transition ${selectedCargo === c.type ? "bg-gray-50 dark:bg-gray-800 ring-1 ring-brand-200 dark:ring-brand-800" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"}`}
+                        >
+                          <span className="text-xs text-gray-600 dark:text-gray-300 w-24 shrink-0 font-medium">{c.type}</span>
+                          <div className="flex-1 h-3 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                            <div className={`h-full rounded-full ${c.color} transition-all`} style={{ width: `${c.pct}%` }} />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 w-10 text-right">{c.pct}%</span>
                         </div>
-                        <span className="text-xs font-medium text-gray-700 w-10 text-right">{c.pct}%</span>
+                        {selectedCargo === c.type && (
+                          <div className="ml-2 mr-2 mt-1 mb-2 rounded-lg bg-gray-50 dark:bg-gray-800/80 p-3 grid grid-cols-3 gap-3 text-center">
+                            <div>
+                              <p className="text-[10px] text-gray-500">Loads</p>
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">{c.loads.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500">Avg Price</p>
+                              <p className="text-sm font-bold text-brand-600 dark:text-brand-400">GHS {c.avgPrice.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500">Revenue</p>
+                              <p className="text-sm font-bold text-emerald-600">GHS {(c.loads * c.avgPrice).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
+              {/* Top Routes — Interactive, sortable, expandable */}
               <div className="card">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Routes</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Top Routes</h3>
+                  <button onClick={handleExportLoadsCSV} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    Export
+                  </button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-gray-100 dark:border-gray-800">
                         <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 uppercase">Route</th>
-                        <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Loads</th>
-                        <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Avg Price</th>
-                        <th className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                        <th onClick={() => toggleRouteSort("loads")} className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 select-none">
+                          Loads {loadSortCol === "loads" ? (loadSortDir === "desc" ? "↓" : "↑") : ""}
+                        </th>
+                        <th onClick={() => toggleRouteSort("avg")} className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 select-none">
+                          Avg Price {loadSortCol === "avg" ? (loadSortDir === "desc" ? "↓" : "↑") : ""}
+                        </th>
+                        <th onClick={() => toggleRouteSort("rev")} className="text-right py-2 px-3 text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 select-none">
+                          Revenue {loadSortCol === "rev" ? (loadSortDir === "desc" ? "↓" : "↑") : ""}
+                        </th>
                         <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Trend</th>
+                        <th className="text-center py-2 px-3 text-xs font-medium text-gray-500 uppercase">Details</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { route: "Accra → Kumasi", loads: 412, avg: 1850, rev: 762200, trend: [3, 5, 4, 7, 6, 8] },
-                        { route: "Tema → Takoradi", loads: 287, avg: 2100, rev: 602700, trend: [2, 3, 5, 4, 6, 7] },
-                        { route: "Accra → Tamale", loads: 198, avg: 3400, rev: 673200, trend: [4, 3, 5, 6, 7, 9] },
-                        { route: "Kumasi → Tamale", loads: 142, avg: 2800, rev: 397600, trend: [2, 4, 3, 5, 4, 6] },
-                        { route: "Tema → Kumasi", loads: 134, avg: 2050, rev: 274700, trend: [3, 4, 4, 5, 5, 6] },
-                      ].map((r) => (
-                        <tr key={r.route} className="border-b border-gray-50 hover:bg-gray-50/50">
-                          <td className="py-3 px-3 font-medium text-gray-900">{r.route}</td>
-                          <td className="py-3 px-3 text-right text-gray-700">{r.loads}</td>
-                          <td className="py-3 px-3 text-right text-gray-700">GHS {r.avg.toLocaleString()}</td>
-                          <td className="py-3 px-3 text-right font-medium text-gray-900">GHS {r.rev.toLocaleString()}</td>
-                          <td className="py-3 px-3"><MiniBar data={r.trend} color="bg-brand-400" /></td>
-                        </tr>
+                      {sortedRoutes.map((r) => (
+                        <>
+                          <tr key={r.route} className={`border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition cursor-pointer ${expandedRoute === r.route ? "bg-brand-50/50 dark:bg-brand-950/20" : ""}`} onClick={() => setExpandedRoute(expandedRoute === r.route ? null : r.route)}>
+                            <td className="py-3 px-3 font-medium text-gray-900 dark:text-white">{r.route}</td>
+                            <td className="py-3 px-3 text-right text-gray-700 dark:text-gray-300">{r.loads}</td>
+                            <td className="py-3 px-3 text-right text-gray-700 dark:text-gray-300">GHS {r.avg.toLocaleString()}</td>
+                            <td className="py-3 px-3 text-right font-medium text-gray-900 dark:text-white">GHS {r.rev.toLocaleString()}</td>
+                            <td className="py-3 px-3"><MiniBar data={r.trend} color="bg-brand-400" /></td>
+                            <td className="py-3 px-3 text-center">
+                              <button className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium">{expandedRoute === r.route ? "Hide" : "View"}</button>
+                            </td>
+                          </tr>
+                          {expandedRoute === r.route && (
+                            <tr key={r.route + "-detail"} className="bg-gray-50/70 dark:bg-gray-800/40">
+                              <td colSpan={6} className="px-3 py-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                  <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium">Distance</p>
+                                    <p className="text-lg font-black text-gray-900 dark:text-white">{r.distance} km</p>
+                                  </div>
+                                  <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium">Avg Time</p>
+                                    <p className="text-lg font-black text-blue-600 dark:text-blue-400">{r.avgTime}</p>
+                                  </div>
+                                  <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium">Completion</p>
+                                    <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{r.completionRate}%</p>
+                                  </div>
+                                  <div className="rounded-lg bg-white dark:bg-gray-900 p-3 text-center shadow-sm">
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium">Top Carrier</p>
+                                    <p className="text-xs font-bold text-gray-900 dark:text-white mt-1">{r.topCarrier}</p>
+                                  </div>
+                                </div>
+                                <div className="mt-3 flex items-center gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex justify-between text-[10px] mb-1">
+                                      <span className="text-gray-500">Revenue share</span>
+                                      <span className="font-semibold text-gray-700 dark:text-gray-300">{((r.rev / TOP_ROUTES.reduce((a, x) => a + x.rev, 0)) * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div className="h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                                      <div className="h-full rounded-full bg-brand-500" style={{ width: `${(r.rev / TOP_ROUTES.reduce((a, x) => a + x.rev, 0)) * 100}%` }} />
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <p className="text-xs text-gray-500">
+                    {TOP_ROUTES.length} routes &middot; Total revenue: <span className="font-semibold text-gray-700 dark:text-gray-300">GHS {TOP_ROUTES.reduce((a, r) => a + r.rev, 0).toLocaleString()}</span>
+                  </p>
+                  <p className="text-xs text-gray-400">Click column headers to sort &middot; Click rows for details</p>
                 </div>
               </div>
             </div>
