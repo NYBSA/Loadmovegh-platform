@@ -176,9 +176,13 @@ export default function AdminDashboard() {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
+  /* Sync sidebar submenu with filter status */
+  const effectiveStatus = section === "users-approved" ? "approved" : section === "users-rejected" ? "rejected" : filterStatus;
+  const isUsersSection = section === "users" || section === "users-approved" || section === "users-rejected";
+
   const filteredUsers = users.filter((u) => {
     if (filterType !== "all" && u.type !== filterType) return false;
-    if (filterStatus !== "all" && u.kyc !== filterStatus) return false;
+    if (effectiveStatus !== "all" && u.kyc !== effectiveStatus) return false;
     return true;
   });
 
@@ -342,7 +346,7 @@ export default function AdminDashboard() {
           {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
               SECTION: USER APPROVALS
               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-          {section === "users" && (
+          {isUsersSection && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -354,7 +358,11 @@ export default function AdminDashboard() {
                     <option value="shipper">Shipper</option>
                     <option value="courier">Courier</option>
                   </select>
-                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input py-1.5 text-xs w-32">
+                  <select
+                    value={effectiveStatus}
+                    onChange={(e) => { setFilterStatus(e.target.value); if (section !== "users") setSection("users"); }}
+                    className="input py-1.5 text-xs w-32"
+                  >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
