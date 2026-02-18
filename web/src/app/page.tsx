@@ -383,6 +383,48 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Platform Capabilities ─────────────────────── */}
+        <section className="py-14">
+          {/* Category row */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            {[
+              { label: "Fulfillment Automation", icon: "📦" },
+              { label: "Dispatch Planning", icon: "🗺️" },
+              { label: "Delivery Orchestration", icon: "🚚" },
+              { label: "Real-Time Tracking", icon: "📍" },
+              { label: "Smart Analytics", icon: "📊" },
+            ].map((cat) => (
+              <div key={cat.label} className="rounded-xl bg-cream-100 border border-cream-300/60 px-4 py-5 text-center">
+                <span className="text-2xl mb-2 block">{cat.icon}</span>
+                <p className="text-sm font-bold text-gray-900 leading-tight">{cat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature icons row */}
+          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 gap-4">
+            {[
+              { label: "Order Management", icon: "📋", color: "from-orange-100 to-orange-50" },
+              { label: "Auto Allocation", icon: "⚡", color: "from-yellow-100 to-yellow-50" },
+              { label: "Capacity Management", icon: "📐", color: "from-teal-100 to-teal-50" },
+              { label: "Route Optimization", icon: "🛣️", color: "from-red-100 to-red-50" },
+              { label: "3PL Management", icon: "🏭", color: "from-purple-100 to-purple-50" },
+              { label: "Share My Fleet", icon: "🤝", color: "from-blue-100 to-blue-50" },
+              { label: "Tracking Link", icon: "🔗", color: "from-indigo-100 to-indigo-50" },
+              { label: "Driver App", icon: "📱", color: "from-green-100 to-green-50" },
+              { label: "Business Insights", icon: "🌐", color: "from-cyan-100 to-cyan-50" },
+              { label: "Customisable Reports", icon: "📈", color: "from-pink-100 to-pink-50" },
+            ].map((feat) => (
+              <div key={feat.label} className="flex flex-col items-center text-center group">
+                <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feat.color} flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 group-hover:shadow-md transition-all duration-200 mb-2`}>
+                  {feat.icon}
+                </div>
+                <p className="text-[11px] font-semibold text-gray-700 leading-tight">{feat.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── Vehicle Fleet Carousel ──────────────────── */}
         <section className="py-12 -mx-4 sm:-mx-6 lg:-mx-8">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl mb-2">
