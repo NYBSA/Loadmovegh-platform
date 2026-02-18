@@ -36,6 +36,7 @@ interface AdminContextValue {
   user: AdminUser | null;
   isAuthenticated: boolean;
   hasAdminAccess: boolean;
+  login: (email: string, name: string, role: AdminRole) => void;
   logout: () => void;
   sidebarOpen: boolean;
   sidebarCollapsed: boolean;
@@ -115,6 +116,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (stored === "collapsed") setSidebarCollapsed(true);
   }, []);
 
+  const login = useCallback((email: string, name: string, role: AdminRole) => {
+    const userData = { email, name, role, token: "admin_demo_token", loggedInAt: new Date().toISOString() };
+    localStorage.setItem("loadmovegh_admin", JSON.stringify(userData));
+    setUser({ email, name, role });
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem("loadmovegh_admin");
     setUser(null);
@@ -171,6 +178,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         hasAdminAccess,
+        login,
         logout,
         sidebarOpen,
         sidebarCollapsed,

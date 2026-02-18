@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAdmin } from "@/context/AdminContext";
 
 const ADMIN_EMAIL = "admin@loadmovegh.com";
 const ADMIN_PASSWORD = "admin1954";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { login } = useAdmin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,10 +29,7 @@ export default function AdminLoginPage() {
     await new Promise((r) => setTimeout(r, 800));
 
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      localStorage.setItem(
-        "loadmovegh_admin",
-        JSON.stringify({ email, name: "System Admin", role: "admin", token: "admin_demo_token", loggedInAt: new Date().toISOString() })
-      );
+      login(email, "System Admin", "admin");
       router.push("/admin/dashboard");
     } else {
       setError("Invalid credentials. Only admin accounts can access this console.");
